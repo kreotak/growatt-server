@@ -107,3 +107,9 @@ Currently included:
 | `T06NNNNXSPH.json` | SPH hybrid inverter (battery + grid export) |
 
 The SPH layout is selected automatically when the packet length exceeds 460 bytes.
+
+---
+
+## Disclaimer
+
+This project was developed with the assistance of AI coding tools.
