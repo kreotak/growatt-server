@@ -1,0 +1,45 @@
+# Build output
+target/
+out/
+
+# IDE — IntelliJ
+.idea/
+*.iml
+
+# IDE — Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+# IDE — NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# IDE — VS Code
+.vscode/
+
+# AI / coding assistant directories
+.claude/
+.cursor/
+.aider*
+.copilot/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets — never commit real credentials
+application-local.yml
+application-prod.yml
+*.env
+.env*
