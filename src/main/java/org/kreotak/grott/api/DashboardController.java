@@ -51,7 +51,6 @@ public class DashboardController {
                 "etouser_tod", "etouser_tot", "etogrid_tod", "etogrid_tot",
                 "edischarge1_tod", "edischarge1_tot", "eharge1_tod", "eharge1_tot",
                 "elocalload_tod", "elocalload_tot", "eacharge_today", "eacharge_total");
-        m.put("allValues", d.values());
         return m;
     }
 

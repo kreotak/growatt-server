@@ -3,291 +3,249 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GrottServer Dashboard</title>
+<title>grottserver</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+:root {
+  --bg:     #0d1117;
+  --surf:   #161b22;
+  --surf2:  #21262d;
+  --border: #30363d;
+  --solar:  #f59e0b;
+  --green:  #22c55e;
+  --red:    #f87171;
+  --blue:   #3b82f6;
+  --text:   #e6edf3;
+  --muted:  #7d8590;
+  --r: 12px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+       background: var(--bg); color: var(--text); min-height: 100vh; }
 
-  header { padding: 1.25rem 2rem; border-bottom: 1px solid #1e293b; display: flex; justify-content: space-between; align-items: center; }
-  header h1 { font-size: 1.25rem; font-weight: 600; color: #f8fafc; }
-  #last-update { font-size: 0.75rem; color: #64748b; }
-  #status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #64748b; margin-right: 6px; vertical-align: middle; }
-  #status-dot.live { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+/* ── header ─────────────────────────────────────────────────────────────── */
+header {
+  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0;
+  background: rgba(13,17,23,.93);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+}
+.logo { font-size: 1.05rem; font-weight: 700; color: var(--solar);
+        display: flex; align-items: center; gap: 8px; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: .75rem;
+        color: var(--muted); background: var(--surf2); border: 1px solid var(--border);
+        border-radius: 20px; padding: 3px 10px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+.dot.live  { background: var(--green); animation: blink 1.5s ease-in-out infinite; }
+.dot.on    { background: var(--green); box-shadow: 0 0 5px var(--green); }
+.dot.warn  { background: var(--solar); }
+.dot.err   { background: var(--red); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
 
-  main { padding: 2rem; display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); }
+/* ── main grid ───────────────────────────────────────────────────────────── */
+main { padding: 24px; display: grid; gap: 20px;
+       grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); }
 
-  .card { background: #1e293b; border-radius: 12px; padding: 1.5rem; border: 1px solid #334155; }
-  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
-  .device-id { font-size: 0.8rem; color: #94a3b8; font-family: monospace; }
-  .badge { font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
-  .badge-normal  { background: #14532d; color: #4ade80; }
-  .badge-waiting { background: #1c1917; color: #a8a29e; }
-  .badge-fault   { background: #450a0a; color: #f87171; }
+/* ── inverter card ───────────────────────────────────────────────────────── */
+.card { background: var(--surf); border: 1px solid var(--border); border-radius: var(--r); padding: 24px; }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.device-id { font-size: .8rem; color: var(--muted); font-family: monospace; }
+.badge { font-size: .7rem; font-weight: 700; padding: 2px 10px; border-radius: 999px; }
+.badge-normal  { background: #052e16; color: #4ade80; border: 1px solid #166534; }
+.badge-waiting { background: var(--surf2); color: var(--muted); border: 1px solid var(--border); }
+.badge-fault   { background: #450a0a; color: var(--red); border: 1px solid #7f1d1d; }
 
-  /* ── power hero (non-SPH) ── */
-  .power-hero { display: flex; align-items: flex-end; gap: 1.5rem; margin-bottom: 1.25rem; }
-  .power-block { flex: 1; }
-  .power-label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
-  .power-value { font-size: 2.25rem; font-weight: 700; color: #f8fafc; line-height: 1; }
-  .power-sub   { font-size: 0.85rem; color: #64748b; margin-top: 2px; }
+/* power hero (non-SPH) */
+.power-hero { display: flex; align-items: flex-end; gap: 20px; margin-bottom: 20px; }
+.power-block { flex: 1; }
+.power-label { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+.power-value { font-size: 2.1rem; font-weight: 700; color: var(--text); line-height: 1; }
+.power-sub   { font-size: .85rem; color: var(--muted); margin-top: 2px; }
 
-  /* ── energy today row ── */
-  .energy-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 1rem; }
-  .energy-tile { background: #0f172a; border-radius: 8px; padding: 0.55rem 0.7rem; text-align: center; }
-  .energy-icon { font-size: 1rem; line-height: 1; margin-bottom: 2px; }
-  .energy-val  { font-size: 0.95rem; font-weight: 600; color: #cbd5e1; }
-  .energy-lbl  { font-size: 0.65rem; color: #475569; text-transform: uppercase; letter-spacing: .04em; margin-top: 1px; }
+/* section labels */
+.section-title { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 16px 0 8px; }
 
-  /* ── flow diagram animation ── */
-  @keyframes flowDash { to { stroke-dashoffset: 0; } }
+/* energy today */
+.energy-row  { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 12px; }
+.energy-tile { background: var(--surf2); border: 1px solid var(--border); border-radius: 8px;
+               padding: 10px 8px; text-align: center; }
+.energy-icon { font-size: 1rem; margin-bottom: 2px; }
+.energy-val  { font-size: .95rem; font-weight: 600; color: var(--text); }
+.energy-lbl  { font-size: .65rem; color: var(--muted); text-transform: uppercase;
+               letter-spacing: .04em; margin-top: 2px; }
 
-  /* ── generic grid ── */
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem; }
-  .metric { background: #0f172a; border-radius: 8px; padding: 0.6rem 0.8rem; }
-  .metric-label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
-  .metric-value { font-size: 1rem; font-weight: 600; color: #cbd5e1; }
-  .metric-value small { font-weight: 400; font-size: 0.75rem; color: #64748b; }
+/* metric grid */
+.grid2   { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.metric  { background: var(--surf2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+.metric-label { font-size: .7rem; color: var(--muted); text-transform: uppercase;
+                letter-spacing: .04em; margin-bottom: 2px; }
+.metric-value { font-size: 1rem; font-weight: 600; color: var(--text); }
+.metric-value small { font-weight: 400; font-size: .75rem; color: var(--muted); }
 
-  .section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: .08em; color: #475569; margin: 1rem 0 0.5rem; }
-  .strings { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
-  .string-card   { background: #0f172a; border-radius: 8px; padding: 0.6rem 0.8rem; }
-  .string-name   { font-size: 0.7rem; color: #64748b; margin-bottom: 4px; }
-  .string-watt   { font-size: 1rem; font-weight: 600; color: #fbbf24; }
-  .string-detail { font-size: 0.75rem; color: #64748b; margin-top: 2px; }
+/* PV strings */
+.strings     { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.string-card { background: var(--surf2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+.string-name   { font-size: .7rem; color: var(--muted); margin-bottom: 4px; }
+.string-watt   { font-size: 1rem; font-weight: 600; color: var(--solar); }
+.string-detail { font-size: .75rem; color: var(--muted); margin-top: 2px; }
 
-  .timestamp { font-size: 0.7rem; color: #475569; margin-top: 1rem; text-align: right; }
+.timestamp { font-size: .7rem; color: var(--muted); margin-top: 16px; text-align: right; }
 
-  .raw-toggle { margin-top: 1rem; width: 100%; background: none; border: 1px solid #334155; border-radius: 6px;
-    padding: 0.4rem 0.75rem; font-size: 0.75rem; color: #64748b; cursor: pointer; text-align: left; }
-  .raw-toggle:hover { background: #0f172a; color: #94a3b8; }
-  .raw-table { display: none; margin-top: 0.5rem; width: 100%; border-collapse: collapse; font-size: 0.75rem; font-family: monospace; }
-  .raw-table.open { display: table; }
-  .raw-table td { padding: 0.2rem 0.4rem; border-bottom: 1px solid #1e293b; vertical-align: top; }
-  .raw-table td:first-child { color: #64748b; white-space: nowrap; padding-right: 1rem; }
-  .raw-table td:last-child  { color: #cbd5e1; word-break: break-all; }
-  .raw-table tr:last-child td { border-bottom: none; }
+/* flow animation */
+@keyframes flowDash { to { stroke-dashoffset: 0; } }
 
-  #no-data { grid-column: 1/-1; text-align: center; padding: 4rem; color: #475569; }
-  #no-data p { margin-top: 0.5rem; font-size: 0.875rem; }
+/* empty state */
+#no-data { grid-column: 1/-1; text-align: center; padding: 5rem; color: var(--muted); }
+#no-data h2 { font-size: 1.1rem; margin-bottom: 8px; color: var(--text); }
+#no-data p  { font-size: .875rem; }
 
-  /* ── settings panel ── */
-  #settings { border-top: 1px solid #1e293b; padding: 1.5rem 2rem; }
-  .settings-heading { font-size: 0.7rem; text-transform: uppercase; letter-spacing: .1em; color: #475569; margin-bottom: 1rem; }
-  .settings-card { background: #1e293b; border-radius: 10px; border: 1px solid #334155; padding: 1.25rem; max-width: 480px; }
-  .settings-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
-  .settings-row:last-child { margin-bottom: 0; }
-  .settings-label { font-size: 0.75rem; color: #64748b; min-width: 52px; }
-  .settings-input { flex: 1; background: #0f172a; border: 1px solid #334155; border-radius: 6px;
-    padding: 0.4rem 0.65rem; font-size: 0.85rem; color: #e2e8f0; outline: none; min-width: 0; }
-  .settings-input:focus { border-color: #3b82f6; }
-  .settings-input.port { width: 80px; flex: none; }
-  .mqtt-status { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; }
-  .mqtt-dot { width: 8px; height: 8px; border-radius: 50%; background: #64748b; flex-shrink: 0; }
-  .mqtt-dot.connected { background: #22c55e; box-shadow: 0 0 6px #22c55e; }
-  .mqtt-dot.disabled  { background: #475569; }
-  .toggle { position: relative; width: 36px; height: 20px; cursor: pointer; }
-  .toggle input { opacity: 0; width: 0; height: 0; }
-  .toggle-track { position: absolute; inset: 0; background: #334155; border-radius: 10px; transition: background .2s; }
-  .toggle input:checked ~ .toggle-track { background: #3b82f6; }
-  .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 14px; height: 14px;
-    background: #fff; border-radius: 50%; transition: transform .2s; }
-  .toggle input:checked ~ .toggle-thumb { transform: translateX(16px); }
-  .btn-save { padding: 0.4rem 1rem; background: #3b82f6; color: #fff; border: none; border-radius: 6px;
-    font-size: 0.8rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
-  .btn-save:hover { background: #2563eb; }
-  .btn-save:disabled { background: #334155; color: #64748b; cursor: default; }
-  .save-feedback { font-size: 0.75rem; color: #64748b; margin-left: 0.5rem; }
+@media (max-width: 480px) {
+  main { padding: 16px; grid-template-columns: 1fr; }
+  header { padding: 12px 16px; }
+}
 </style>
 </head>
 <body>
-<header>
-  <h1>&#9728; GrottServer Dashboard</h1>
-  <div><span id="status-dot"></span><span id="last-update">connecting…</span></div>
-</header>
-<main id="cards">
-  <div id="no-data"><h2>No inverter data yet</h2><p>Waiting for datalogger connection…</p></div>
-</main>
 
-<section id="settings">
-  <div class="settings-heading">Settings</div>
-  <div class="settings-card">
-    <div class="settings-row">
-      <span class="settings-label">MQTT</span>
-      <span class="mqtt-status"><span class="mqtt-dot" id="mqtt-dot"></span><span id="mqtt-status-text">loading…</span></span>
-      <div style="flex:1"></div>
-      <label class="toggle" title="Enable MQTT">
-        <input type="checkbox" id="mqtt-enabled">
-        <span class="toggle-track"></span>
-        <span class="toggle-thumb"></span>
-      </label>
+<header>
+  <div class="logo">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+      <circle cx="12" cy="12" r="4"/>
+      <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+    </svg>
+    grottserver
+  </div>
+  <div class="header-right">
+    <div class="pill" id="mqtt-badge" hidden>
+      <span class="dot" id="mqtt-dot"></span>
+      <span id="mqtt-text">MQTT</span>
     </div>
-    <div class="settings-row">
-      <span class="settings-label">Broker</span>
-      <input class="settings-input" id="mqtt-host" type="text" placeholder="192.168.1.100" spellcheck="false">
-      <span style="color:#475569;font-size:.85rem">:</span>
-      <input class="settings-input port" id="mqtt-port" type="number" min="1" max="65535" placeholder="1883">
-    </div>
-    <div class="settings-row">
-      <span class="settings-label">Topic</span>
-      <input class="settings-input" id="mqtt-topic" type="text" placeholder="energy/growatt" spellcheck="false">
-    </div>
-    <div class="settings-row">
-      <span class="settings-label">Auth</span>
-      <label class="toggle" title="Use username/password">
-        <input type="checkbox" id="mqtt-auth" onchange="toggleAuthFields()">
-        <span class="toggle-track"></span>
-        <span class="toggle-thumb"></span>
-      </label>
-    </div>
-    <div id="mqtt-auth-fields" style="display:none">
-      <div class="settings-row">
-        <span class="settings-label">User</span>
-        <input class="settings-input" id="mqtt-user" type="text" autocomplete="off" spellcheck="false">
-      </div>
-      <div class="settings-row">
-        <span class="settings-label">Password</span>
-        <input class="settings-input" id="mqtt-password" type="password" autocomplete="new-password">
-      </div>
-    </div>
-    <div class="settings-row">
-      <span class="settings-label">HA Discovery</span>
-      <label class="toggle" title="Publish Home Assistant MQTT Discovery configs">
-        <input type="checkbox" id="mqtt-ha-discovery">
-        <span class="toggle-track"></span>
-        <span class="toggle-thumb"></span>
-      </label>
-      <span style="font-size:.72rem;color:#475569;margin-left:.5rem">Auto-create entities in Home Assistant</span>
-    </div>
-    <div class="settings-row">
-      <button class="btn-save" id="mqtt-save" onclick="saveMqtt()">Save &amp; Connect</button>
-      <span class="save-feedback" id="mqtt-feedback"></span>
+    <div class="pill">
+      <span class="dot" id="status-dot"></span>
+      <span id="last-update">connecting…</span>
     </div>
   </div>
-</section>
+</header>
+
+<main id="cards">
+  <div id="no-data">
+    <h2>No inverter data yet</h2>
+    <p>Waiting for datalogger connection on port 5279…</p>
+  </div>
+</main>
 
 <script>
-const STATUS = { 0:['Waiting','waiting'], 1:['Normal','normal'], 3:['Fault','fault'], 5:['Waiting','waiting'] };
+const STATUS = {
+  0: ['Waiting','waiting'], 1: ['Normal','normal'],
+  3: ['Fault','fault'],     5: ['Waiting','waiting']
+};
 
 function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function fmt(val, unit, digits=1) {
+function fmt(val, unit, digits = 1) {
   if (val == null || val === '') return '—';
-  return (+val).toFixed(digits) + ' ' + unit;
+  return (+val).toFixed(digits) + ' ' + unit;
 }
 
 function kw(w) {
   if (w == null) return '—';
   const v = +w;
-  return v >= 1000 ? (v/1000).toFixed(2) + ' kW' : v.toFixed(0) + ' W';
+  return v >= 1000 ? (v / 1000).toFixed(2) + ' kW' : v.toFixed(0) + ' W';
 }
 
-// Short label for SVG flow lines
 function pw(w) {
   if (!w || +w === 0) return '';
   const v = +w;
-  return v >= 1000 ? (v/1000).toFixed(1)+'kW' : Math.round(v)+'W';
+  return v >= 1000 ? (v / 1000).toFixed(1) + 'kW' : Math.round(v) + 'W';
 }
 
-// ── Energy flow diagram (SPH only) ────────────────────────────────────────
+// ── Power flow SVG diagram (SPH) ──────────────────────────────────────────
 
 function renderFlowDiagram(inv) {
   if (inv.SOC == null) return '';
 
   const pvPow  = +(inv.pvpowerin   ?? 0);
-  const impPow = +(inv.pactouserr  ?? 0);   // grid → home
-  const expPow = +(inv.pactogridr  ?? 0);   // home → grid
-  const chrPow = +(inv.p1charge1   ?? 0);   // home → battery
-  const disPow = +(inv.pdischarge1 ?? 0);   // battery → home
+  const impPow = +(inv.pactouserr  ?? 0);
+  const expPow = +(inv.pactogridr  ?? 0);
+  const chrPow = +(inv.p1charge1   ?? 0);
+  const disPow = +(inv.pdischarge1 ?? 0);
   const load   = +(inv.plocaloadr  ?? 0);
   const soc    = +inv.SOC;
 
-  const T = 15; // W threshold for "active"
+  const T = 15;
   const pvOn  = pvPow  > T;
   const impOn = impPow > T;
   const expOn = expPow > T;
   const chrOn = chrPow > T;
   const disOn = disPow > T;
-
-  const socColor   = soc > 50 ? '#22c55e' : soc > 20 ? '#f59e0b' : '#ef4444';
-  const gridColor  = impOn ? '#60a5fa' : expOn ? '#34d399' : '#334155';
-  const batColor   = chrOn ? '#f59e0b' : disOn ? '#34d399' : '#334155';
   const gridActive = impOn || expOn;
   const batActive  = chrOn || disOn;
-  // grid line path goes left→right; import = forward (left→right = grid→home), export = reverse
-  const gridRev = expOn && !impOn;
-  // battery line path goes left→right; charge = forward (home→bat), discharge = reverse
-  const batRev  = disOn && !chrOn;
 
-  function lineAttrs(active, color, rev) {
-    if (!active) return `stroke="${color}" stroke-dasharray="3 5" opacity="0.25"`;
+  const socColor  = soc > 50 ? '#22c55e' : soc > 20 ? '#f59e0b' : '#ef4444';
+  const gridColor = impOn ? '#60a5fa' : expOn ? '#34d399' : '#30363d';
+  const batColor  = chrOn ? '#f59e0b' : disOn ? '#34d399' : '#30363d';
+
+  function line(active, color, rev) {
+    if (!active) return `stroke="${color}" stroke-dasharray="3 5" opacity="0.3"`;
     return `stroke="${color}" stroke-width="2.5" stroke-dasharray="7 4" stroke-dashoffset="11"
             style="animation:flowDash .65s linear infinite${rev ? ' reverse' : ''}"`;
   }
 
-  // Node layout (viewBox 0 0 300 172):
-  //   PV   : rect(110,5,80,46)  centre(150,28)  bottom-edge y=51
-  //   Grid : rect(4,97,72,47)   centre(40,120)  right-edge  x=76
-  //   Home : rect(113,97,74,47) centre(150,120) left x=113  right x=187
-  //   Bat  : rect(224,97,72,47) centre(260,120) left-edge  x=224
-
   const gridLabel = pw(impOn ? impPow : expPow);
   const batLabel  = pw(chrOn ? chrPow : disPow);
-  const pvLabel   = pw(pvPow);
 
   return `<svg viewBox="0 0 300 172" xmlns="http://www.w3.org/2000/svg"
-               style="width:100%;display:block;margin-bottom:0.25rem">
+               style="width:100%;display:block;margin-bottom:4px">
 
-    <!-- ── connection lines (drawn first, behind nodes) ── -->
-
-    <!-- PV → Home (vertical, top-to-bottom = forward when generating) -->
+    <!-- lines -->
     <line x1="150" y1="51" x2="150" y2="97" stroke-width="2.5"
-          ${lineAttrs(pvOn, pvOn ? '#fbbf24' : '#334155', false)}/>
-    ${pvLabel ? `<text x="155" y="78" fill="#fbbf24" font-size="9.5" font-family="system-ui,sans-serif">${pvLabel}</text>` : ''}
+          ${line(pvOn, pvOn ? '#f59e0b' : '#30363d', false)}/>
+    ${pw(pvPow) ? `<text x="155" y="78" fill="#f59e0b" font-size="9.5" font-family="sans-serif">${pw(pvPow)}</text>` : ''}
 
-    <!-- Grid ↔ Home (horizontal) -->
-    <line x1="76" y1="120" x2="113" y2="120" stroke-width="2.5"
-          ${lineAttrs(gridActive, gridColor, gridRev)}/>
-    ${gridLabel ? `<text x="${93 - gridLabel.length * 2.8}" y="114" fill="${gridColor}" font-size="9.5" font-family="system-ui,sans-serif">${gridLabel}</text>` : ''}
+    <line x1="76"  y1="120" x2="113" y2="120" stroke-width="2.5"
+          ${line(gridActive, gridColor, expOn && !impOn)}/>
+    ${gridLabel ? `<text x="${93 - gridLabel.length * 2.8}" y="114" fill="${gridColor}" font-size="9.5" font-family="sans-serif">${gridLabel}</text>` : ''}
 
-    <!-- Home ↔ Battery (horizontal) -->
     <line x1="187" y1="120" x2="224" y2="120" stroke-width="2.5"
-          ${lineAttrs(batActive, batColor, batRev)}/>
-    ${batLabel ? `<text x="${205 - batLabel.length * 2.8}" y="114" fill="${batColor}" font-size="9.5" font-family="system-ui,sans-serif">${batLabel}</text>` : ''}
+          ${line(batActive, batColor, disOn && !chrOn)}/>
+    ${batLabel ? `<text x="${205 - batLabel.length * 2.8}" y="114" fill="${batColor}" font-size="9.5" font-family="sans-serif">${batLabel}</text>` : ''}
 
-    <!-- ── nodes ── -->
-
-    <!-- Solar (top centre) -->
+    <!-- Solar -->
     <rect x="110" y="5" width="80" height="46" rx="8"
-          fill="#0f172a" stroke="${pvOn ? '#fbbf24' : '#334155'}" stroke-width="1.2"/>
-    <text x="150" y="26" text-anchor="middle" font-size="14" font-family="system-ui,sans-serif" fill="#fbbf24">&#9728;</text>
-    <text x="150" y="38" text-anchor="middle" font-size="10" font-weight="600" font-family="system-ui,sans-serif" fill="#f8fafc">${pw(pvPow) || '—'}</text>
-    <text x="150" y="47" text-anchor="middle" font-size="7.5" font-family="system-ui,sans-serif" fill="#475569" letter-spacing="0.6">SOLAR</text>
+          fill="#161b22" stroke="${pvOn ? '#f59e0b' : '#30363d'}" stroke-width="1.5"/>
+    <text x="150" y="26" text-anchor="middle" font-size="14" fill="#f59e0b">&#9728;</text>
+    <text x="150" y="38" text-anchor="middle" font-size="10" font-weight="600" font-family="sans-serif" fill="#e6edf3">${pw(pvPow) || '—'}</text>
+    <text x="150" y="47" text-anchor="middle" font-size="7.5" font-family="sans-serif" fill="#7d8590" letter-spacing="0.6">SOLAR</text>
 
-    <!-- Grid (left) -->
+    <!-- Grid -->
     <rect x="4" y="97" width="72" height="47" rx="8"
-          fill="#0f172a" stroke="${gridActive ? gridColor : '#334155'}" stroke-width="1.2"/>
-    <text x="40" y="118" text-anchor="middle" font-size="13" font-family="system-ui,sans-serif" fill="${gridActive ? gridColor : '#475569'}">&#9889;</text>
-    <text x="40" y="129" text-anchor="middle" font-size="9.5" font-weight="600" font-family="system-ui,sans-serif" fill="#f8fafc">${gridActive ? (pw(impOn ? impPow : expPow) || '—') : fmt(inv.pvgridvoltage,'V')}</text>
-    <text x="40" y="139" text-anchor="middle" font-size="7.5" font-family="system-ui,sans-serif" fill="#475569" letter-spacing="0.6">${impOn ? 'IMPORT' : expOn ? 'EXPORT' : 'GRID'}</text>
+          fill="#161b22" stroke="${gridActive ? gridColor : '#30363d'}" stroke-width="1.5"/>
+    <text x="40" y="118" text-anchor="middle" font-size="13" fill="${gridActive ? gridColor : '#7d8590'}">&#9889;</text>
+    <text x="40" y="129" text-anchor="middle" font-size="9.5" font-weight="600" font-family="sans-serif" fill="#e6edf3">${gridActive ? (pw(impOn ? impPow : expPow) || '—') : fmt(inv.pvgridvoltage, 'V')}</text>
+    <text x="40" y="139" text-anchor="middle" font-size="7.5" font-family="sans-serif" fill="#7d8590" letter-spacing="0.6">${impOn ? 'IMPORT' : expOn ? 'EXPORT' : 'GRID'}</text>
 
-    <!-- Home (centre) -->
+    <!-- Home -->
     <rect x="113" y="97" width="74" height="47" rx="8"
-          fill="#1e293b" stroke="#3b82f6" stroke-width="1.5"/>
-    <text x="150" y="118" text-anchor="middle" font-size="13" font-family="system-ui,sans-serif" fill="#93c5fd">&#8962;</text>
-    <text x="150" y="129" text-anchor="middle" font-size="9.5" font-weight="600" font-family="system-ui,sans-serif" fill="#f8fafc">${pw(load) || '—'}</text>
-    <text x="150" y="139" text-anchor="middle" font-size="7.5" font-family="system-ui,sans-serif" fill="#475569" letter-spacing="0.6">HOME</text>
+          fill="#21262d" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="150" y="118" text-anchor="middle" font-size="13" fill="#93c5fd">&#8962;</text>
+    <text x="150" y="129" text-anchor="middle" font-size="9.5" font-weight="600" font-family="sans-serif" fill="#e6edf3">${pw(load) || '—'}</text>
+    <text x="150" y="139" text-anchor="middle" font-size="7.5" font-family="sans-serif" fill="#7d8590" letter-spacing="0.6">HOME</text>
 
-    <!-- Battery (right) -->
+    <!-- Battery -->
     <rect x="224" y="97" width="72" height="47" rx="8"
-          fill="#0f172a" stroke="${socColor}" stroke-width="1.2"/>
-    <!-- battery body -->
+          fill="#161b22" stroke="${socColor}" stroke-width="1.5"/>
     <rect x="236" y="106" width="36" height="18" rx="3" fill="none" stroke="${socColor}" stroke-width="1.2"/>
-    <rect x="272" y="111" width="4" height="8" rx="1" fill="${socColor}" opacity="0.6"/>
-    <rect x="237.5" y="107.5" width="${Math.round(33 * Math.min(soc,100) / 100)}" height="15" rx="2" fill="${socColor}" opacity="0.85"/>
-    <text x="260" y="130" text-anchor="middle" font-size="9.5" font-weight="600" font-family="system-ui,sans-serif" fill="#f8fafc">${soc}%</text>
-    <text x="260" y="139" text-anchor="middle" font-size="7.5" font-family="system-ui,sans-serif" fill="#475569" letter-spacing="0.6">${chrOn ? 'CHARGING' : disOn ? 'DISCHAR.' : 'BATTERY'}</text>
+    <rect x="272"  y="111" width="4"  height="8"  rx="1" fill="${socColor}" opacity="0.5"/>
+    <rect x="237.5" y="107.5" width="${Math.round(33 * Math.min(soc, 100) / 100)}" height="15" rx="2" fill="${socColor}" opacity="0.8"/>
+    <text x="260" y="130" text-anchor="middle" font-size="9.5" font-weight="600" font-family="sans-serif" fill="#e6edf3">${soc}%</text>
+    <text x="260" y="139" text-anchor="middle" font-size="7.5" font-family="sans-serif" fill="#7d8590" letter-spacing="0.6">${chrOn ? 'CHARGING' : disOn ? 'DISCHAR.' : 'BATTERY'}</text>
   </svg>`;
 }
 
@@ -295,14 +253,14 @@ function renderFlowDiagram(inv) {
 
 function renderEnergyRow(inv) {
   const pvToday  = inv.pvenergytoday ?? inv.eactoday ?? null;
-  const fromGrid = inv.etouser_tod  ?? null;
-  const toGrid   = inv.etogrid_tod  ?? null;
+  const fromGrid = inv.etouser_tod ?? null;
+  const toGrid   = inv.etogrid_tod ?? null;
   if (pvToday == null && fromGrid == null && toGrid == null) return '';
   return `
     <div class="section-title">Energy today</div>
     <div class="energy-row">
       <div class="energy-tile">
-        <div class="energy-icon" style="color:#fbbf24">&#9728;</div>
+        <div class="energy-icon" style="color:#f59e0b">&#9728;</div>
         <div class="energy-val">${pvToday != null ? (+pvToday).toFixed(1) : '—'}</div>
         <div class="energy-lbl">PV kWh</div>
       </div>
@@ -322,7 +280,7 @@ function renderEnergyRow(inv) {
 // ── Card renderer ─────────────────────────────────────────────────────────
 
 function renderCard(inv) {
-  const [statusLabel, statusClass] = STATUS[inv.pvstatus] ?? ['Unknown','waiting'];
+  const [statusLabel, statusClass] = STATUS[inv.pvstatus] ?? ['Unknown', 'waiting'];
   const hasSPH   = inv.SOC != null;
   const pvPower  = inv.pvpowerin  ?? null;
   const outPower = inv.pvpowerout ?? inv.pvgridpower ?? null;
@@ -330,38 +288,26 @@ function renderCard(inv) {
   const temp     = inv.pvtemperature ?? null;
   const loadPow  = inv.plocaloadr ?? null;
 
-  const strings = [1,2].map(i => {
+  const strings = [1, 2].map(i => {
     const v = inv[`pv${i}voltage`], w = inv[`pv${i}watt`], a = inv[`pv${i}current`];
     if (!v && !w) return '';
     return `<div class="string-card">
       <div class="string-name">String ${i}</div>
       <div class="string-watt">${kw(w)}</div>
-      <div class="string-detail">${fmt(v,'V')} &middot; ${fmt(a,'A')}</div>
+      <div class="string-detail">${fmt(v, 'V')} &middot; ${fmt(a, 'A')}</div>
     </div>`;
   }).join('');
 
   const phases = [
-    ['L1', inv.pvgridvoltage, inv.pvgridcurrent, inv.pvgridpower],
+    ['L1', inv.pvgridvoltage,  inv.pvgridcurrent,  inv.pvgridpower],
     ['L2', inv.pvgridvoltage2, inv.pvgridcurrent2, inv.pvgridpower2],
     ['L3', inv.pvgridvoltage3, inv.pvgridcurrent3, inv.pvgridpower3],
-  ].filter(([,v]) => v != null && +v !== 0).map(([lbl,v,a,p]) =>
+  ].filter(([, v]) => v != null && +v !== 0).map(([lbl, v, a, p]) =>
     `<div class="metric"><div class="metric-label">${lbl}</div>
-     <div class="metric-value">${fmt(v,'V')} <small>/ ${fmt(a,'A')}</small></div>
-     <div style="font-size:.75rem;color:#64748b">${kw(p)}</div></div>`
+     <div class="metric-value">${fmt(v, 'V')} <small>/ ${fmt(a, 'A')}</small></div>
+     <div style="font-size:.75rem;color:var(--muted)">${kw(p)}</div></div>`
   ).join('');
 
-  const ts = new Date(inv.timestamp).toLocaleTimeString();
-
-  // SPH-only: battery today stats beneath the diagram
-  const batStats = hasSPH ? `
-    <div class="grid2" style="margin-top:0.5rem">
-      <div class="metric"><div class="metric-label">Chr today</div>
-        <div class="metric-value">${fmt(inv.eharge1_tod,'kWh')}</div></div>
-      <div class="metric"><div class="metric-label">Dischr today</div>
-        <div class="metric-value">${fmt(inv.edischarge1_tod,'kWh')}</div></div>
-    </div>` : '';
-
-  // Non-SPH power hero
   const powerHero = !hasSPH ? `
     <div class="power-hero">
       <div class="power-block">
@@ -372,157 +318,93 @@ function renderCard(inv) {
       <div class="power-block" style="text-align:right">
         <div class="power-label">${loadPow != null ? 'Load' : 'Grid out'}</div>
         <div class="power-value" style="font-size:1.5rem">${kw(loadPow ?? outPower)}</div>
-        <div class="power-sub">${fmt(temp,'°C')} &nbsp; ${fmt(freq,'Hz',2)}</div>
+        <div class="power-sub">${fmt(temp, '°C')} &nbsp; ${fmt(freq, 'Hz', 2)}</div>
       </div>
     </div>` : '';
 
-  // SPH: condensed grid/temp/freq row below the diagram
+  const batStats = hasSPH ? `
+    <div class="grid2" style="margin-top:8px">
+      <div class="metric"><div class="metric-label">Chr today</div>
+        <div class="metric-value">${fmt(inv.eharge1_tod, 'kWh')}</div></div>
+      <div class="metric"><div class="metric-label">Dischr today</div>
+        <div class="metric-value">${fmt(inv.edischarge1_tod, 'kWh')}</div></div>
+    </div>` : '';
+
   const sphMeta = hasSPH ? `
     <div class="grid2">
       <div class="metric"><div class="metric-label">Grid</div>
-        <div class="metric-value">${fmt(inv.pvgridvoltage,'V')} <small>/ ${fmt(freq,'Hz',2)}</small></div></div>
+        <div class="metric-value">${fmt(inv.pvgridvoltage, 'V')} <small>/ ${fmt(freq, 'Hz', 2)}</small></div></div>
       <div class="metric"><div class="metric-label">Temperature</div>
-        <div class="metric-value">${fmt(temp,'°C')}</div></div>
+        <div class="metric-value">${fmt(temp, '°C')}</div></div>
     </div>` : '';
+
+  const ts = new Date(inv.timestamp).toLocaleTimeString();
 
   return `<div class="card">
     <div class="card-header">
       <div class="device-id">${escHtml(inv.deviceId)}</div>
       <span class="badge badge-${statusClass}">${statusLabel}</span>
     </div>
-
     ${powerHero}
     ${renderFlowDiagram(inv)}
     ${batStats}
     ${renderEnergyRow(inv)}
     ${sphMeta}
-
     ${strings ? `<div class="section-title">PV Strings</div><div class="strings">${strings}</div>` : ''}
     ${!hasSPH && phases ? `<div class="section-title">Grid</div><div class="grid2">${phases}</div>` : ''}
-
-    <div class="timestamp">Updated ${ts}${inv.buffered ? ' &middot; buffered' : ''}</div>
-    ${renderRawTable(inv.allValues)}
+    <div class="timestamp">Updated ${escHtml(ts)}${inv.buffered ? ' &middot; buffered' : ''}</div>
   </div>`;
 }
 
-function renderRawTable(allValues) {
-  if (!allValues || !Object.keys(allValues).length) return '';
-  const rows = Object.entries(allValues).map(([k,v]) =>
-    `<tr><td>${escHtml(k)}</td><td>${escHtml(v)}</td></tr>`
-  ).join('');
-  return `
-    <button class="raw-toggle" onclick="toggleRaw(this)">&#9660; All values</button>
-    <table class="raw-table"><tbody>${rows}</tbody></table>`;
-}
-
-function toggleRaw(btn) {
-  const table = btn.nextElementSibling;
-  const open = table.classList.toggle('open');
-  btn.textContent = (open ? '▲' : '▼') + ' All values';
-}
+// ── Dashboard poll ────────────────────────────────────────────────────────
 
 async function refresh() {
   try {
-    const res = await fetch('/api/dashboard');
+    const res  = await fetch('/api/dashboard');
     const data = await res.json();
-    document.getElementById('status-dot').className = 'live';
+    document.getElementById('status-dot').className = 'dot live';
     document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
     const cards = document.getElementById('cards');
     if (!data.inverters.length) {
-      cards.innerHTML = '<div id="no-data"><h2>No inverter data yet</h2><p>Waiting for datalogger connection…</p></div>';
-      return;
+      cards.innerHTML = '<div id="no-data"><h2>No inverter data yet</h2><p>Waiting for datalogger connection on port 5279…</p></div>';
+    } else {
+      cards.innerHTML = data.inverters.map(renderCard).join('');
     }
-    cards.innerHTML = data.inverters.map(renderCard).join('');
   } catch {
-    document.getElementById('status-dot').className = '';
+    document.getElementById('status-dot').className = 'dot err';
     document.getElementById('last-update').textContent = 'connection error';
   }
 }
 
-refresh();
-setInterval(refresh, 5000);
+// ── MQTT status badge ─────────────────────────────────────────────────────
 
-// ── MQTT config ────────────────────────────────────────────────────────────
-
-async function loadMqttConfig(populateForm = false) {
+async function refreshMqtt() {
   try {
     const res  = await fetch('/api/config/mqtt');
     const data = await res.json();
-    if (populateForm) applyMqttForm(data);
-    applyMqttStatus(data);
-  } catch {
-    document.getElementById('mqtt-status-text').textContent = 'unreachable';
-  }
+    const badge = document.getElementById('mqtt-badge');
+    const dot   = document.getElementById('mqtt-dot');
+    const text  = document.getElementById('mqtt-text');
+
+    if (!data.enabled) {
+      badge.hidden = true;
+      return;
+    }
+    badge.hidden = false;
+    if (data.connected) {
+      dot.className  = 'dot on';
+      text.textContent = 'MQTT • ' + data.host + ':' + data.port;
+    } else {
+      dot.className  = 'dot warn';
+      text.textContent = 'MQTT • disconnected';
+    }
+  } catch { /* server not yet ready */ }
 }
 
-function toggleAuthFields() {
-  const show = document.getElementById('mqtt-auth').checked;
-  document.getElementById('mqtt-auth-fields').style.display = show ? '' : 'none';
-}
-
-function applyMqttForm(data) {
-  document.getElementById('mqtt-host').value      = data.host  ?? '';
-  document.getElementById('mqtt-port').value      = data.port  ?? 1883;
-  document.getElementById('mqtt-topic').value     = data.topic ?? '';
-  document.getElementById('mqtt-user').value      = data.user  ?? '';
-  document.getElementById('mqtt-password').value  = '';
-  document.getElementById('mqtt-password').placeholder = data.hasPassword ? '••••••••' : 'no password set';
-  document.getElementById('mqtt-enabled').checked      = !!data.enabled;
-  document.getElementById('mqtt-auth').checked          = !!data.auth;
-  document.getElementById('mqtt-ha-discovery').checked  = !!data.haDiscovery;
-  toggleAuthFields();
-}
-
-function applyMqttStatus(data) {
-  const dot  = document.getElementById('mqtt-dot');
-  const text = document.getElementById('mqtt-status-text');
-  if (!data.enabled) {
-    dot.className    = 'mqtt-dot disabled';
-    text.textContent = 'disabled';
-  } else if (data.connected) {
-    dot.className    = 'mqtt-dot connected';
-    text.textContent = 'connected to ' + data.host + ':' + data.port;
-  } else {
-    dot.className    = 'mqtt-dot';
-    text.textContent = 'disconnected';
-  }
-}
-
-async function saveMqtt() {
-  const btn = document.getElementById('mqtt-save');
-  const fb  = document.getElementById('mqtt-feedback');
-  btn.disabled = true;
-  fb.textContent = 'Saving…';
-  try {
-    const body = {
-      host:     document.getElementById('mqtt-host').value.trim(),
-      port:     parseInt(document.getElementById('mqtt-port').value, 10),
-      topic:    document.getElementById('mqtt-topic').value.trim(),
-      enabled:  document.getElementById('mqtt-enabled').checked,
-      auth:        document.getElementById('mqtt-auth').checked,
-      user:        document.getElementById('mqtt-user').value,
-      password:    document.getElementById('mqtt-password').value,
-      haDiscovery: document.getElementById('mqtt-ha-discovery').checked,
-    };
-    const res  = await fetch('/api/config/mqtt', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    const data = await res.json();
-    applyMqttForm(data);
-    applyMqttStatus(data);
-    fb.textContent = 'Saved.';
-    setTimeout(() => { fb.textContent = ''; }, 3000);
-  } catch {
-    fb.textContent = 'Error saving.';
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-loadMqttConfig(true);
-setInterval(loadMqttConfig, 10000);
+refresh();
+refreshMqtt();
+setInterval(refresh,      5000);
+setInterval(refreshMqtt, 15000);
 </script>
 </body>
 </html>
