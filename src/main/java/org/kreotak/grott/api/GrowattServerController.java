@@ -30,9 +30,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * GET  /info                                                        – server status
  */
 @RestController
-public class GrottController {
+public class GrowattServerController {
 
-    private static final Logger log = LoggerFactory.getLogger(GrottController.class);
+    private static final Logger log = LoggerFactory.getLogger(GrowattServerController.class);
     private static final DateTimeFormatter DT_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final AtomicInteger SEQ = new AtomicInteger(1);
 
@@ -41,7 +41,7 @@ public class GrottController {
     private final UdpServer udpServer;
     private final GrottProperties props;
 
-    public GrottController(DeviceRegistry registry, TcpServer tcpServer, UdpServer udpServer, GrottProperties props) {
+    public GrowattServerController(DeviceRegistry registry, TcpServer tcpServer, UdpServer udpServer, GrottProperties props) {
         this.registry  = registry;
         this.tcpServer = tcpServer;
         this.udpServer = udpServer;

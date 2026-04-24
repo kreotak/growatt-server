@@ -13,9 +13,9 @@
     </parent>
 
     <groupId>org.kreotak</groupId>
-    <artifactId>grottserver</artifactId>
+    <artifactId>growatt-server</artifactId>
     <version>1.0.0-SNAPSHOT</version>
-    <name>grottserver</name>
+    <name>growatt-server</name>
     <description>Growatt inverter server – Java reimplementation of grottserver.py</description>
 
     <properties>

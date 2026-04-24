@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>grottserver — Growatt Inverter Server for Java</title>
+<title>growatt-server — Growatt Inverter Server for Java</title>
 <meta name="description" content="Growatt solar inverter server — Java reimplementation. Receive, decode, and forward real-time inverter data to MQTT, InfluxDB, PVOutput, and more.">
 <style>
 :root {
@@ -119,7 +119,7 @@ footer { border-top: 1px solid var(--border); padding: 28px 0; text-align: cente
         <circle cx="12" cy="12" r="4"/>
         <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
       </svg>
-      grottserver
+      growatt-server
     </a>
     <div class="nav-links">
       <a href="#dashboard">Dashboard</a>
@@ -135,7 +135,7 @@ footer { border-top: 1px solid var(--border); padding: 28px 0; text-align: cente
 <!-- ── HERO ─────────────────────────────────────────────────────────────── -->
 <section class="hero">
   <div class="wrap">
-    <h1>grottserver</h1>
+    <h1>growatt-server</h1>
     <p class="hero-sub">Growatt solar inverter server — Java reimplementation. Receive, decode, and forward real-time inverter data to MQTT, InfluxDB, PVOutput, and more.</p>
     <div class="btn-row">
       <a id="btn-dl" href="#" class="btn btn-primary">
@@ -227,9 +227,10 @@ footer { border-top: 1px solid var(--border); padding: 28px 0; text-align: cente
 
         <!-- Battery -->
         <rect x="22" y="162" width="133" height="90" rx="10" fill="#161b22" stroke="#3b82f6" stroke-width="2"/>
-        <text x="88"  y="194" text-anchor="middle" font-size="26">🔋</text>
-        <text x="88"  y="217" text-anchor="middle" fill="#7d8590" font-size="11" font-family="sans-serif" letter-spacing=".05em">BATTERY</text>
-        <text x="88"  y="238" text-anchor="middle" fill="#3b82f6" font-size="16" font-weight="700" font-family="monospace" id="d-bat">78%</text>
+        <text x="88"  y="189" text-anchor="middle" font-size="20">🔋</text>
+        <text x="88"  y="206" text-anchor="middle" fill="#7d8590" font-size="10" font-family="sans-serif" letter-spacing=".05em">BATTERY</text>
+        <text x="88"  y="223" text-anchor="middle" fill="#3b82f6" font-size="15" font-weight="700" font-family="monospace" id="d-bat">78%</text>
+        <text x="88"  y="244" text-anchor="middle" fill="#3b82f6" font-size="11" font-family="monospace" id="d-bat-rate">+200 W</text>
 
         <!-- Grid -->
         <rect x="565" y="162" width="133" height="90" rx="10" fill="#161b22" stroke="#22c55e" stroke-width="2" id="d-grid-box"/>
@@ -327,7 +328,7 @@ footer { border-top: 1px solid var(--border); padding: 28px 0; text-align: cente
     <div class="code-card">
       <pre><span class="cm"># docker-compose.yml</span>
 <span class="ky">services</span>:
-  <span class="ky">grottserver</span>:
+  <span class="ky">growatt-server</span>:
     <span class="ky">image</span>: <span class="st">eclipse-temurin:21-jre</span>
     <span class="ky">ports</span>:
       - <span class="st">"5279:5279"</span>   <span class="cm"># inverter TCP / UDP</span>
@@ -336,9 +337,9 @@ footer { border-top: 1px solid var(--border); padding: 28px 0; text-align: cente
       - <span class="vl">MQTT_ENABLED=true</span>
       - <span class="vl">MQTT_HOST=your-mqtt-broker</span>
       - <span class="vl">MQTT_HA_DISCOVERY=true</span>
-    <span class="ky">command</span>: <span class="st">["java", "-jar", "/app/grottserver.jar"]</span>
+    <span class="ky">command</span>: <span class="st">["java", "-jar", "/app/growatt-server.jar"]</span>
     <span class="ky">volumes</span>:
-      - <span class="st">./grottserver.jar:/app/grottserver.jar:ro</span>
+      - <span class="st">./growatt-server.jar:/app/growatt-server.jar:ro</span>
     <span class="ky">restart</span>: <span class="vl">unless-stopped</span></pre>
     </div>
   </div>
@@ -348,7 +349,7 @@ footer { border-top: 1px solid var(--border); padding: 28px 0; text-align: cente
 <section class="sec dl-sec" id="download">
   <div class="wrap">
     <div class="sec-label">Download</div>
-    <h2 class="sec-title">Get grottserver</h2>
+    <h2 class="sec-title">Get growatt-server</h2>
     <div class="ver-pill" id="ver-badge">v1.0.0</div>
     <p class="req-note">Requires Java 21 or later · Spring Boot fat-JAR · no installation needed</p>
     <div class="btn-row">
@@ -369,7 +370,7 @@ footer { border-top: 1px solid var(--border); padding: 28px 0; text-align: cente
 
 <footer>
   <div class="wrap">
-    <p>grottserver · MIT License · inspired by <a href="https://github.com/johanmeijer/grott" target="_blank" rel="noopener">grott</a> by Johan Meijer</p>
+    <p>growatt-server · MIT License · inspired by <a href="https://github.com/johanmeijer/grott" target="_blank" rel="noopener">grott</a> by Johan Meijer</p>
   </div>
 </footer>
 
@@ -383,7 +384,7 @@ const gh      = 'https://github.com/' + repo;
 document.getElementById('nav-gh').href      = gh;
 document.getElementById('btn-gh').href      = gh;
 document.getElementById('btn-dl').href      = gh + '/releases/latest';
-document.getElementById('dl-jar').href      = gh + '/releases/latest/download/grottserver-' + version + '.jar';
+document.getElementById('dl-jar').href      = gh + '/releases/latest/download/growatt-server-' + version + '.jar';
 document.getElementById('dl-releases').href = gh + '/releases';
 document.getElementById('dl-source').href   = gh;
 document.getElementById('ver-badge').textContent = 'v' + version;
@@ -428,6 +429,10 @@ function tick() {
   $('d-pv').textContent   = fmt(st.pvW) + ' W';
   $('d-load').textContent = fmt(st.loadW) + ' W';
   $('d-bat').textContent  = fmt(st.batSoc, 0) + '%';
+  const batRate = Math.abs(Math.round(st.batW));
+  const charging = st.batW >= 0;
+  $('d-bat-rate').textContent = batRate > 15 ? (charging ? '+' : '-') + fmt(batRate) + ' W' : 'idle';
+  $('d-bat-rate').setAttribute('fill', charging ? '#3b82f6' : '#22c55e');
   gText.textContent  = (exporting ? '+' : '') + fmt(gridW) + ' W';
   gText.setAttribute('fill', exporting ? '#22c55e' : '#f87171');
   gBox.setAttribute('stroke', exporting ? '#22c55e' : '#f87171');

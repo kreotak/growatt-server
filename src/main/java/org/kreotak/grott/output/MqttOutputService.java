@@ -112,7 +112,7 @@ public class MqttOutputService implements OutputService {
         GrottProperties.Mqtt cfg = props.getMqtt();
         String broker = "tcp://" + cfg.getHost() + ":" + cfg.getPort();
         try {
-            client = new MqttClient(broker, "grottserver-" + System.currentTimeMillis(),
+            client = new MqttClient(broker, "growatt-server-" + System.currentTimeMillis(),
                     new MemoryPersistence());
             MqttConnectOptions opts = new MqttConnectOptions();
             opts.setAutomaticReconnect(true);
@@ -183,7 +183,7 @@ public class MqttOutputService implements OutputService {
         String prefix = cfg.getHaDiscoveryPrefix();
 
         Map<String, Object> device = new LinkedHashMap<>();
-        device.put("identifiers", List.of("grottserver_" + deviceId));
+        device.put("identifiers", List.of("growatt-server_" + deviceId));
         device.put("name", "Growatt " + deviceId);
         device.put("model", "Growatt SPH");
         device.put("manufacturer", "Growatt");
@@ -192,7 +192,7 @@ public class MqttOutputService implements OutputService {
         for (SensorDef sd : SENSOR_DEFS) {
             if (!data.values().containsKey(sd.field())) continue;
 
-            String objectId = "grottserver_" + deviceId + "_" + sd.field();
+            String objectId = "growatt-server_" + deviceId + "_" + sd.field();
             String discoveryTopic = prefix + "/sensor/" + objectId + "/config";
 
             Map<String, Object> config = new LinkedHashMap<>();

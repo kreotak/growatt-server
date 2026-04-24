@@ -1,4 +1,4 @@
-# grottserver-java
+# growatt-server
 
 Java/Spring Boot reimplementation of [grottserver](https://github.com/johanmeijer/grott) for Growatt solar inverter monitoring.
 
@@ -20,7 +20,7 @@ Change via `application.yml` (`grott.server-port` / `server.port`).
 ## Running
 
 ```bash
-java -jar grottserver-java.jar
+java -jar growatt-server.jar
 ```
 
 Or with Docker, pass environment variables directly (see below).
@@ -44,7 +44,7 @@ All variables are optional. Defaults are shown.
 | `MQTT_RETAIN` | `false` | Publish with MQTT retain flag |
 | `MQTT_AUTH` | `false` | Enable username/password authentication |
 | `MQTT_USER` | `grott` | MQTT username (used when `MQTT_AUTH=true`) |
-| `MQTT_PASSWORD` | `growatt2020` | MQTT password (used when `MQTT_AUTH=true`) |
+| `MQTT_PASSWORD` | _(empty)_ | MQTT password (used when `MQTT_AUTH=true`) |
 
 ### Home Assistant MQTT Discovery
 
@@ -56,7 +56,7 @@ All variables are optional. Defaults are shown.
 When `MQTT_HA_DISCOVERY=true` the server publishes retained sensor config messages to:
 
 ```
-<prefix>/sensor/grottserver_<deviceId>_<field>/config
+<prefix>/sensor/growatt-server_<deviceId>_<field>/config
 ```
 
 Home Assistant picks these up automatically and creates entities grouped under a single *Growatt \<deviceId\>* device. Covered sensors include power (W), energy (kWh, `total_increasing` for the Energy dashboard), voltage, current, frequency, temperature, and battery SOC.
@@ -81,7 +81,7 @@ environment:
 
 ## Dashboard
 
-Open `http://<host>:5782` in a browser. The dashboard shows live data, an animated energy flow diagram (Solar → Home → Battery → Grid), and a settings panel to configure MQTT at runtime without a restart.
+Open `http://<host>:5782` in a browser. The dashboard shows live data and an animated energy flow diagram (Solar → Home → Battery → Grid). MQTT connection state is shown in the header when MQTT is enabled.
 
 ---
 
@@ -91,8 +91,7 @@ Open `http://<host>:5782` in a browser. The dashboard shows live data, an animat
 |----------|-------------|
 | `GET /api/inverters` | List all known device IDs |
 | `GET /api/inverter/{id}` | Latest data for a device |
-| `GET /api/config/mqtt` | Current MQTT configuration and connection state |
-| `POST /api/config/mqtt` | Update MQTT configuration and reconnect |
+| `GET /api/config/mqtt` | Current MQTT connection state |
 | `GET /actuator/health` | Spring Boot health check |
 
 ---
