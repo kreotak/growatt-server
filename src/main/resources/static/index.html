@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>grottserver</title>
+<title>growatt-server</title>
 <style>
 :root {
   --bg:     #0d1117;
@@ -14,6 +14,7 @@
   --green:  #22c55e;
   --red:    #f87171;
   --blue:   #3b82f6;
+  --purple: #a78bfa;
   --text:   #e6edf3;
   --muted:  #7d8590;
   --r: 12px;
@@ -47,7 +48,7 @@ header {
 
 /* ── main grid ───────────────────────────────────────────────────────────── */
 main { padding: 24px; display: grid; gap: 20px;
-       grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); }
+       grid-template-columns: repeat(auto-fill, minmax(500px, 1fr)); }
 
 /* ── inverter card ───────────────────────────────────────────────────────── */
 .card { background: var(--surf); border: 1px solid var(--border); border-radius: var(--r); padding: 24px; }
@@ -58,51 +59,42 @@ main { padding: 24px; display: grid; gap: 20px;
 .badge-waiting { background: var(--surf2); color: var(--muted); border: 1px solid var(--border); }
 .badge-fault   { background: #450a0a; color: var(--red); border: 1px solid #7f1d1d; }
 
-/* power hero (non-SPH) */
+/* flow SVG */
+.flow-svg { width: 100%; height: auto; display: block; margin-bottom: 20px; }
+
+/* ── stat cards ──────────────────────────────────────────────────────────── */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.stat-card { background: var(--surf2); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; text-align: center; }
+.stat-lbl  { font-size: .7rem; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em; }
+.stat-val  { font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stat-val span { font-size: .75rem; color: var(--muted); margin-left: 1px; }
+
+/* ── non-SPH hero ────────────────────────────────────────────────────────── */
 .power-hero { display: flex; align-items: flex-end; gap: 20px; margin-bottom: 20px; }
 .power-block { flex: 1; }
 .power-label { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
 .power-value { font-size: 2.1rem; font-weight: 700; color: var(--text); line-height: 1; }
 .power-sub   { font-size: .85rem; color: var(--muted); margin-top: 2px; }
-
-/* section labels */
-.section-title { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 16px 0 8px; }
-
-/* energy today */
-.energy-row  { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 12px; }
-.energy-tile { background: var(--surf2); border: 1px solid var(--border); border-radius: 8px;
-               padding: 10px 8px; text-align: center; }
-.energy-icon { font-size: 1rem; margin-bottom: 2px; }
-.energy-val  { font-size: .95rem; font-weight: 600; color: var(--text); }
-.energy-lbl  { font-size: .65rem; color: var(--muted); text-transform: uppercase;
-               letter-spacing: .04em; margin-top: 2px; }
-
-/* metric grid */
-.grid2   { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-.metric  { background: var(--surf2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
-.metric-label { font-size: .7rem; color: var(--muted); text-transform: uppercase;
-                letter-spacing: .04em; margin-bottom: 2px; }
+.section-title { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 14px 0 8px; }
+.grid2  { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.metric { background: var(--surf2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+.metric-label { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
 .metric-value { font-size: 1rem; font-weight: 600; color: var(--text); }
 .metric-value small { font-weight: 400; font-size: .75rem; color: var(--muted); }
-
-/* PV strings */
 .strings     { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .string-card { background: var(--surf2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
 .string-name   { font-size: .7rem; color: var(--muted); margin-bottom: 4px; }
 .string-watt   { font-size: 1rem; font-weight: 600; color: var(--solar); }
 .string-detail { font-size: .75rem; color: var(--muted); margin-top: 2px; }
 
-.timestamp { font-size: .7rem; color: var(--muted); margin-top: 16px; text-align: right; }
+.timestamp { font-size: .7rem; color: var(--muted); text-align: right; }
 
-/* flow animation */
-@keyframes flowDash { to { stroke-dashoffset: 0; } }
-
-/* empty state */
+/* ── empty state ─────────────────────────────────────────────────────────── */
 #no-data { grid-column: 1/-1; text-align: center; padding: 5rem; color: var(--muted); }
 #no-data h2 { font-size: 1.1rem; margin-bottom: 8px; color: var(--text); }
 #no-data p  { font-size: .875rem; }
 
-@media (max-width: 480px) {
+@media (max-width: 560px) {
   main { padding: 16px; grid-template-columns: 1fr; }
   header { padding: 12px 16px; }
 }
@@ -116,7 +108,7 @@ main { padding: 24px; display: grid; gap: 20px;
       <circle cx="12" cy="12" r="4"/>
       <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
     </svg>
-    grottserver
+    growatt-server
   </div>
   <div class="header-right">
     <div class="pill" id="mqtt-badge" hidden>
@@ -144,40 +136,33 @@ const STATUS = {
 };
 
 function escHtml(s) {
-  return String(s)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
 function fmt(val, unit, digits = 1) {
   if (val == null || val === '') return '—';
   return (+val).toFixed(digits) + ' ' + unit;
 }
-
 function kw(w) {
   if (w == null) return '—';
   const v = +w;
-  return v >= 1000 ? (v / 1000).toFixed(2) + ' kW' : v.toFixed(0) + ' W';
+  return v >= 1000 ? (v / 1000).toFixed(2) + '‬kW' : v.toFixed(0) + '‬W';
 }
-
-function pw(w) {
-  if (!w || +w === 0) return '';
+function fmtW(w) {
+  if (!w || +w === 0) return '—‬W';
   const v = +w;
-  return v >= 1000 ? (v / 1000).toFixed(1) + 'kW' : Math.round(v) + 'W';
+  return v >= 1000 ? (v / 1000).toFixed(2) + '‬kW' : Math.round(v) + '‬W';
 }
 
-// ── Power flow SVG diagram (SPH) ──────────────────────────────────────────
+// ── 5-node power flow SVG (SPH inverters with battery) ────────────────────
 
 function renderFlowDiagram(inv) {
-  if (inv.SOC == null) return '';
-
   const pvPow  = +(inv.pvpowerin   ?? 0);
   const impPow = +(inv.pactouserr  ?? 0);
   const expPow = +(inv.pactogridr  ?? 0);
   const chrPow = +(inv.p1charge1   ?? 0);
   const disPow = +(inv.pdischarge1 ?? 0);
   const load   = +(inv.plocaloadr  ?? 0);
-  const soc    = +inv.SOC;
+  const soc    = +(inv.SOC ?? 0);
 
   const T = 15;
   const pvOn  = pvPow  > T;
@@ -185,103 +170,126 @@ function renderFlowDiagram(inv) {
   const expOn = expPow > T;
   const chrOn = chrPow > T;
   const disOn = disPow > T;
-  const gridActive = impOn || expOn;
-  const batActive  = chrOn || disOn;
 
-  const socColor  = soc > 50 ? '#22c55e' : soc > 20 ? '#f59e0b' : '#ef4444';
-  const gridColor = impOn ? '#60a5fa' : expOn ? '#34d399' : '#30363d';
-  const batColor  = chrOn ? '#f59e0b' : disOn ? '#34d399' : '#30363d';
+  const socColor    = soc > 50 ? '#22c55e' : soc > 20 ? '#f59e0b' : '#ef4444';
+  const gridColor   = impOn ? '#f87171' : expOn ? '#22c55e' : '#30363d';
+  const batColor    = chrOn ? '#3b82f6' : disOn ? '#22c55e' : '#30363d';
+  const batPow      = chrOn ? '+' + fmtW(chrPow) : disOn ? '-' + fmtW(disPow) : '';
+  const batPowColor = chrOn ? '#3b82f6' : '#22c55e';
 
-  function line(active, color, rev) {
-    if (!active) return `stroke="${color}" stroke-dasharray="3 5" opacity="0.3"`;
-    return `stroke="${color}" stroke-width="2.5" stroke-dasharray="7 4" stroke-dashoffset="11"
-            style="animation:flowDash .65s linear infinite${rev ? ' reverse' : ''}"`;
-  }
+  const [statusLabel] = STATUS[inv.pvstatus] ?? ['Unknown'];
+  const statusColor = inv.pvstatus === 1 ? '#22c55e' : inv.pvstatus === 3 ? '#f87171' : '#7d8590';
 
-  const gridLabel = pw(impOn ? impPow : expPow);
-  const batLabel  = pw(chrOn ? chrPow : disPow);
+  // Unique path IDs per device (safe for multiple cards)
+  const uid = escHtml(inv.deviceId).replace(/[^a-z0-9]/gi, '_');
 
-  return `<svg viewBox="0 0 300 172" xmlns="http://www.w3.org/2000/svg"
-               style="width:100%;display:block;margin-bottom:4px">
+  const dots = (path, fill, dur, count = 3) =>
+    Array.from({length: count}, (_, i) =>
+      `<circle r="5" fill="${fill}" opacity=".9"><animateMotion dur="${dur}s" repeatCount="indefinite" begin="${(i * dur / count).toFixed(2)}s"><mpath href="#${path}"/></animateMotion></circle>`
+    ).join('');
 
-    <!-- lines -->
-    <line x1="150" y1="51" x2="150" y2="97" stroke-width="2.5"
-          ${line(pvOn, pvOn ? '#f59e0b' : '#30363d', false)}/>
-    ${pw(pvPow) ? `<text x="155" y="78" fill="#f59e0b" font-size="9.5" font-family="sans-serif">${pw(pvPow)}</text>` : ''}
+  return `
+  <svg class="flow-svg" viewBox="0 0 720 270" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <path id="pv-${uid}"       d="M 155,68  C 210,68  245,115 280,120"/>
+      <path id="load-${uid}"     d="M 440,120 C 475,115 510,68  565,68"/>
+      <path id="bat-${uid}"      d="M 300,175 C 260,200  200,210 155,210"/>
+      <path id="bat-rev-${uid}"  d="M 155,210 C 200,210  260,200 300,175"/>
+      <path id="grid-${uid}"     d="M 420,175 C 460,200  520,210 565,210"/>
+      <path id="grid-rev-${uid}" d="M 565,210 C 520,210  460,200 420,175"/>
+    </defs>
 
-    <line x1="76"  y1="120" x2="113" y2="120" stroke-width="2.5"
-          ${line(gridActive, gridColor, expOn && !impOn)}/>
-    ${gridLabel ? `<text x="${93 - gridLabel.length * 2.8}" y="114" fill="${gridColor}" font-size="9.5" font-family="sans-serif">${gridLabel}</text>` : ''}
+    <!-- static lines -->
+    <use href="#pv-${uid}"   fill="none" stroke="#30363d" stroke-width="2.5"/>
+    <use href="#load-${uid}" fill="none" stroke="#30363d" stroke-width="2.5"/>
+    <use href="#bat-${uid}"  fill="none" stroke="#30363d" stroke-width="2.5"/>
+    <use href="#grid-${uid}" fill="none" stroke="#30363d" stroke-width="2.5"/>
 
-    <line x1="187" y1="120" x2="224" y2="120" stroke-width="2.5"
-          ${line(batActive, batColor, disOn && !chrOn)}/>
-    ${batLabel ? `<text x="${205 - batLabel.length * 2.8}" y="114" fill="${batColor}" font-size="9.5" font-family="sans-serif">${batLabel}</text>` : ''}
+    <!-- PV → Inverter -->
+    ${pvOn  ? dots(`pv-${uid}`,       '#f59e0b', 1.3) : ''}
+    <!-- Inverter → Load (always, load is always present) -->
+    ${load > T ? dots(`load-${uid}`,  '#a78bfa', 1.5) : ''}
+    <!-- Battery charging -->
+    ${chrOn ? dots(`bat-${uid}`,      '#3b82f6', 2.2) : ''}
+    <!-- Battery discharging -->
+    ${disOn ? dots(`bat-rev-${uid}`,  '#22c55e', 2.2) : ''}
+    <!-- Grid export -->
+    ${expOn ? dots(`grid-${uid}`,     '#22c55e', 2.0, 2) : ''}
+    <!-- Grid import -->
+    ${impOn ? dots(`grid-rev-${uid}`, '#f87171', 2.0, 2) : ''}
 
-    <!-- Solar -->
-    <rect x="110" y="5" width="80" height="46" rx="8"
-          fill="#161b22" stroke="${pvOn ? '#f59e0b' : '#30363d'}" stroke-width="1.5"/>
-    <text x="150" y="26" text-anchor="middle" font-size="14" fill="#f59e0b">&#9728;</text>
-    <text x="150" y="38" text-anchor="middle" font-size="10" font-weight="600" font-family="sans-serif" fill="#e6edf3">${pw(pvPow) || '—'}</text>
-    <text x="150" y="47" text-anchor="middle" font-size="7.5" font-family="sans-serif" fill="#7d8590" letter-spacing="0.6">SOLAR</text>
+    <!-- PV node -->
+    <rect x="22" y="22" width="133" height="90" rx="10" fill="#161b22" stroke="${pvOn ? '#f59e0b' : '#30363d'}" stroke-width="2"/>
+    <text x="88"  y="53" text-anchor="middle" font-size="26">☀️</text>
+    <text x="88"  y="76" text-anchor="middle" fill="#7d8590"  font-size="11" font-family="sans-serif" letter-spacing=".05em">PV POWER</text>
+    <text x="88"  y="97" text-anchor="middle" fill="#f59e0b"  font-size="15" font-weight="700" font-family="monospace">${fmtW(pvPow)}</text>
 
-    <!-- Grid -->
-    <rect x="4" y="97" width="72" height="47" rx="8"
-          fill="#161b22" stroke="${gridActive ? gridColor : '#30363d'}" stroke-width="1.5"/>
-    <text x="40" y="118" text-anchor="middle" font-size="13" fill="${gridActive ? gridColor : '#7d8590'}">&#9889;</text>
-    <text x="40" y="129" text-anchor="middle" font-size="9.5" font-weight="600" font-family="sans-serif" fill="#e6edf3">${gridActive ? (pw(impOn ? impPow : expPow) || '—') : fmt(inv.pvgridvoltage, 'V')}</text>
-    <text x="40" y="139" text-anchor="middle" font-size="7.5" font-family="sans-serif" fill="#7d8590" letter-spacing="0.6">${impOn ? 'IMPORT' : expOn ? 'EXPORT' : 'GRID'}</text>
+    <!-- Inverter node (center) -->
+    <rect x="260" y="88" width="200" height="88" rx="10" fill="#161b22" stroke="#f59e0b" stroke-width="2"/>
+    <text x="360" y="116" text-anchor="middle" fill="#7d8590"       font-size="11" font-family="sans-serif" letter-spacing=".05em">INVERTER</text>
+    <text x="360" y="138" text-anchor="middle" fill="#e6edf3"       font-size="13" font-family="monospace">${escHtml(inv.deviceId)}</text>
+    <text x="360" y="159" text-anchor="middle" fill="${statusColor}" font-size="11" font-family="sans-serif">&#x25cf; ${statusLabel.toUpperCase()}</text>
 
-    <!-- Home -->
-    <rect x="113" y="97" width="74" height="47" rx="8"
-          fill="#21262d" stroke="#3b82f6" stroke-width="1.5"/>
-    <text x="150" y="118" text-anchor="middle" font-size="13" fill="#93c5fd">&#8962;</text>
-    <text x="150" y="129" text-anchor="middle" font-size="9.5" font-weight="600" font-family="sans-serif" fill="#e6edf3">${pw(load) || '—'}</text>
-    <text x="150" y="139" text-anchor="middle" font-size="7.5" font-family="sans-serif" fill="#7d8590" letter-spacing="0.6">HOME</text>
+    <!-- Load / Home node -->
+    <rect x="565" y="22" width="133" height="90" rx="10" fill="#161b22" stroke="#a78bfa" stroke-width="2"/>
+    <text x="631" y="53" text-anchor="middle" font-size="26">🏠</text>
+    <text x="631" y="76" text-anchor="middle" fill="#7d8590"  font-size="11" font-family="sans-serif" letter-spacing=".05em">LOAD</text>
+    <text x="631" y="97" text-anchor="middle" fill="#a78bfa"  font-size="15" font-weight="700" font-family="monospace">${fmtW(load)}</text>
 
-    <!-- Battery -->
-    <rect x="224" y="97" width="72" height="47" rx="8"
-          fill="#161b22" stroke="${socColor}" stroke-width="1.5"/>
-    <rect x="236" y="106" width="36" height="18" rx="3" fill="none" stroke="${socColor}" stroke-width="1.2"/>
-    <rect x="272"  y="111" width="4"  height="8"  rx="1" fill="${socColor}" opacity="0.5"/>
-    <rect x="237.5" y="107.5" width="${Math.round(33 * Math.min(soc, 100) / 100)}" height="15" rx="2" fill="${socColor}" opacity="0.8"/>
-    <text x="260" y="130" text-anchor="middle" font-size="9.5" font-weight="600" font-family="sans-serif" fill="#e6edf3">${soc}%</text>
-    <text x="260" y="139" text-anchor="middle" font-size="7.5" font-family="sans-serif" fill="#7d8590" letter-spacing="0.6">${chrOn ? 'CHARGING' : disOn ? 'DISCHAR.' : 'BATTERY'}</text>
+    <!-- Battery node -->
+    <rect x="22" y="162" width="133" height="90" rx="10" fill="#161b22" stroke="${socColor}" stroke-width="2"/>
+    <text x="88"  y="190" text-anchor="middle" font-size="20">🔋</text>
+    <text x="88"  y="207" text-anchor="middle" fill="#7d8590"    font-size="10" font-family="sans-serif" letter-spacing=".05em">BATTERY</text>
+    <text x="88"  y="224" text-anchor="middle" fill="${socColor}" font-size="14" font-weight="700" font-family="monospace">${soc}%</text>
+    ${batPow ? `<text x="88" y="244" text-anchor="middle" fill="${batPowColor}" font-size="11" font-family="monospace">${batPow}</text>` : ''}
+
+    <!-- Grid node -->
+    <rect x="565" y="162" width="133" height="90" rx="10" fill="#161b22" stroke="${gridColor}" stroke-width="2"/>
+    <text x="631" y="193" text-anchor="middle" font-size="26">⚡</text>
+    <text x="631" y="216" text-anchor="middle" fill="#7d8590"    font-size="11" font-family="sans-serif" letter-spacing=".05em">${impOn ? 'IMPORT' : expOn ? 'EXPORT' : 'GRID'}</text>
+    <text x="631" y="237" text-anchor="middle" fill="${gridColor}" font-size="15" font-weight="700" font-family="monospace">${fmtW(impOn ? impPow : expPow)}</text>
   </svg>`;
 }
 
-// ── Energy today row ──────────────────────────────────────────────────────
+// ── 8 stat cards (SPH) ────────────────────────────────────────────────────
 
-function renderEnergyRow(inv) {
+function renderStatCards(inv) {
+  const freq     = inv.pvfrequentie ?? inv.pvfrequency ?? null;
+  const temp     = inv.pvtemperature ?? null;
   const pvToday  = inv.pvenergytoday ?? inv.eactoday ?? null;
-  const fromGrid = inv.etouser_tod ?? null;
-  const toGrid   = inv.etogrid_tod ?? null;
-  if (pvToday == null && fromGrid == null && toGrid == null) return '';
-  return `
-    <div class="section-title">Energy today</div>
-    <div class="energy-row">
-      <div class="energy-tile">
-        <div class="energy-icon" style="color:#f59e0b">&#9728;</div>
-        <div class="energy-val">${pvToday != null ? (+pvToday).toFixed(1) : '—'}</div>
-        <div class="energy-lbl">PV kWh</div>
-      </div>
-      <div class="energy-tile">
-        <div class="energy-icon" style="color:#60a5fa">&#8595;</div>
-        <div class="energy-val">${fromGrid != null ? (+fromGrid).toFixed(1) : '—'}</div>
-        <div class="energy-lbl">From grid</div>
-      </div>
-      <div class="energy-tile">
-        <div class="energy-icon" style="color:#34d399">&#8593;</div>
-        <div class="energy-val">${toGrid != null ? (+toGrid).toFixed(1) : '—'}</div>
-        <div class="energy-lbl">To grid</div>
-      </div>
+  const pvTotal  = inv.pvenergytotal ?? inv.eactotal ?? null;
+
+  function card(lbl, val, unit, color) {
+    return `<div class="stat-card">
+      <div class="stat-lbl">${lbl}</div>
+      <div class="stat-val" style="color:${color}">${val}<span>${unit}</span></div>
     </div>`;
+  }
+
+  const pv1v = inv.pv1voltage != null ? (+inv.pv1voltage).toFixed(0) : '—';
+  const pv2v = inv.pv2voltage != null ? (+inv.pv2voltage).toFixed(0) : '—';
+  const gv   = inv.pvgridvoltage != null ? (+inv.pvgridvoltage).toFixed(0) : '—';
+  const fr   = freq != null ? (+freq).toFixed(1) : '—';
+  const tp   = temp != null ? (+temp).toFixed(0) : '—';
+  const td   = pvToday != null ? (+pvToday).toFixed(1) : '—';
+  const tot  = pvTotal != null ? (+pvTotal).toFixed(0) : '—';
+  const soc  = inv.SOC != null ? (+inv.SOC).toFixed(0) : '—';
+
+  return `<div class="stat-grid">
+    ${card('PV String 1',    pv1v, 'V',   'var(--solar)')}
+    ${card('PV String 2',    pv2v, 'V',   'var(--solar)')}
+    ${card('Grid Voltage',   gv,   'V',   'var(--text)')}
+    ${card('Grid Frequency', fr,   'Hz',  'var(--text)')}
+    ${card('Temperature',    tp,   '°C',  'var(--text)')}
+    ${card('Energy Today',   td,   'kWh', 'var(--green)')}
+    ${card('Energy Total',   tot,  'kWh', 'var(--green)')}
+    ${card('Battery SOC',    soc,  '%',   'var(--blue)')}
+  </div>`;
 }
 
-// ── Card renderer ─────────────────────────────────────────────────────────
+// ── Non-SPH card body ─────────────────────────────────────────────────────
 
-function renderCard(inv) {
-  const [statusLabel, statusClass] = STATUS[inv.pvstatus] ?? ['Unknown', 'waiting'];
-  const hasSPH   = inv.SOC != null;
+function renderNonSph(inv) {
   const pvPower  = inv.pvpowerin  ?? null;
   const outPower = inv.pvpowerout ?? inv.pvgridpower ?? null;
   const freq     = inv.pvfrequentie ?? inv.pvfrequency ?? null;
@@ -294,7 +302,7 @@ function renderCard(inv) {
     return `<div class="string-card">
       <div class="string-name">String ${i}</div>
       <div class="string-watt">${kw(w)}</div>
-      <div class="string-detail">${fmt(v, 'V')} &middot; ${fmt(a, 'A')}</div>
+      <div class="string-detail">${fmt(v,'V')} &middot; ${fmt(a,'A')}</div>
     </div>`;
   }).join('');
 
@@ -302,13 +310,13 @@ function renderCard(inv) {
     ['L1', inv.pvgridvoltage,  inv.pvgridcurrent,  inv.pvgridpower],
     ['L2', inv.pvgridvoltage2, inv.pvgridcurrent2, inv.pvgridpower2],
     ['L3', inv.pvgridvoltage3, inv.pvgridcurrent3, inv.pvgridpower3],
-  ].filter(([, v]) => v != null && +v !== 0).map(([lbl, v, a, p]) =>
+  ].filter(([,v]) => v != null && +v !== 0).map(([lbl,v,a,p]) =>
     `<div class="metric"><div class="metric-label">${lbl}</div>
-     <div class="metric-value">${fmt(v, 'V')} <small>/ ${fmt(a, 'A')}</small></div>
+     <div class="metric-value">${fmt(v,'V')} <small>/ ${fmt(a,'A')}</small></div>
      <div style="font-size:.75rem;color:var(--muted)">${kw(p)}</div></div>`
   ).join('');
 
-  const powerHero = !hasSPH ? `
+  return `
     <div class="power-hero">
       <div class="power-block">
         <div class="power-label">PV input</div>
@@ -318,26 +326,18 @@ function renderCard(inv) {
       <div class="power-block" style="text-align:right">
         <div class="power-label">${loadPow != null ? 'Load' : 'Grid out'}</div>
         <div class="power-value" style="font-size:1.5rem">${kw(loadPow ?? outPower)}</div>
-        <div class="power-sub">${fmt(temp, '°C')} &nbsp; ${fmt(freq, 'Hz', 2)}</div>
+        <div class="power-sub">${fmt(temp,'°C')} &nbsp; ${fmt(freq,'Hz',2)}</div>
       </div>
-    </div>` : '';
+    </div>
+    ${strings ? `<div class="section-title">PV Strings</div><div class="strings">${strings}</div>` : ''}
+    ${phases   ? `<div class="section-title">Grid</div><div class="grid2">${phases}</div>` : ''}`;
+}
 
-  const batStats = hasSPH ? `
-    <div class="grid2" style="margin-top:8px">
-      <div class="metric"><div class="metric-label">Chr today</div>
-        <div class="metric-value">${fmt(inv.eharge1_tod, 'kWh')}</div></div>
-      <div class="metric"><div class="metric-label">Dischr today</div>
-        <div class="metric-value">${fmt(inv.edischarge1_tod, 'kWh')}</div></div>
-    </div>` : '';
+// ── Card renderer ─────────────────────────────────────────────────────────
 
-  const sphMeta = hasSPH ? `
-    <div class="grid2">
-      <div class="metric"><div class="metric-label">Grid</div>
-        <div class="metric-value">${fmt(inv.pvgridvoltage, 'V')} <small>/ ${fmt(freq, 'Hz', 2)}</small></div></div>
-      <div class="metric"><div class="metric-label">Temperature</div>
-        <div class="metric-value">${fmt(temp, '°C')}</div></div>
-    </div>` : '';
-
+function renderCard(inv) {
+  const [statusLabel, statusClass] = STATUS[inv.pvstatus] ?? ['Unknown', 'waiting'];
+  const hasSPH = inv.SOC != null;
   const ts = new Date(inv.timestamp).toLocaleTimeString();
 
   return `<div class="card">
@@ -345,13 +345,7 @@ function renderCard(inv) {
       <div class="device-id">${escHtml(inv.deviceId)}</div>
       <span class="badge badge-${statusClass}">${statusLabel}</span>
     </div>
-    ${powerHero}
-    ${renderFlowDiagram(inv)}
-    ${batStats}
-    ${renderEnergyRow(inv)}
-    ${sphMeta}
-    ${strings ? `<div class="section-title">PV Strings</div><div class="strings">${strings}</div>` : ''}
-    ${!hasSPH && phases ? `<div class="section-title">Grid</div><div class="grid2">${phases}</div>` : ''}
+    ${hasSPH ? renderFlowDiagram(inv) + renderStatCards(inv) : renderNonSph(inv)}
     <div class="timestamp">Updated ${escHtml(ts)}${inv.buffered ? ' &middot; buffered' : ''}</div>
   </div>`;
 }
@@ -365,11 +359,9 @@ async function refresh() {
     document.getElementById('status-dot').className = 'dot live';
     document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
     const cards = document.getElementById('cards');
-    if (!data.inverters.length) {
-      cards.innerHTML = '<div id="no-data"><h2>No inverter data yet</h2><p>Waiting for datalogger connection on port 5279…</p></div>';
-    } else {
-      cards.innerHTML = data.inverters.map(renderCard).join('');
-    }
+    cards.innerHTML = data.inverters.length
+      ? data.inverters.map(renderCard).join('')
+      : '<div id="no-data"><h2>No inverter data yet</h2><p>Waiting for datalogger connection on port 5279…</p></div>';
   } catch {
     document.getElementById('status-dot').className = 'dot err';
     document.getElementById('last-update').textContent = 'connection error';
@@ -385,19 +377,12 @@ async function refreshMqtt() {
     const badge = document.getElementById('mqtt-badge');
     const dot   = document.getElementById('mqtt-dot');
     const text  = document.getElementById('mqtt-text');
-
-    if (!data.enabled) {
-      badge.hidden = true;
-      return;
-    }
+    if (!data.enabled) { badge.hidden = true; return; }
     badge.hidden = false;
-    if (data.connected) {
-      dot.className  = 'dot on';
-      text.textContent = 'MQTT • ' + data.host + ':' + data.port;
-    } else {
-      dot.className  = 'dot warn';
-      text.textContent = 'MQTT • disconnected';
-    }
+    dot.className    = data.connected ? 'dot on' : 'dot warn';
+    text.textContent = data.connected
+      ? 'MQTT • ' + data.host + ':' + data.port
+      : 'MQTT • disconnected';
   } catch { /* server not yet ready */ }
 }
 

@@ -6,8 +6,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 
 @SpringBootApplication
 @EnableConfigurationProperties
-public class GrottServerApplication {
+public class GrowattServerApplication {
     public static void main(String[] args) {
-        SpringApplication.run(GrottServerApplication.class, args);
+        SpringApplication.run(GrowattServerApplication.class, args);
     }
 }

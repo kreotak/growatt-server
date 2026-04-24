@@ -1,5 +1,5 @@
 services:
-  grottserver:
+  growatt-server:
     image: eclipse-temurin:21-jre
     restart: unless-stopped
     ports:
@@ -8,7 +8,7 @@ services:
       - "5782:5782/tcp"
     volumes:
       - ./app:/app
-    command: java -jar /app/grottserver-1.0.0-SNAPSHOT.jar
+    command: java -jar /app/growatt-server-1.0.0.jar
     environment:
       # ── MQTT ──────────────────────────────────────
       MQTT_ENABLED: "false"

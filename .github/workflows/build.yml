@@ -60,7 +60,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jar
-          path: target/grottserver-*.jar
+          path: target/growatt-server-*.jar
           if-no-files-found: error
           retention-days: 1
 
@@ -98,12 +98,12 @@ jobs:
           git push origin "v${VERSION}"
 
           # Rename to the release version (strips the pom -SNAPSHOT suffix)
-          mv artifacts/grottserver-*.jar "artifacts/grottserver-${VERSION}.jar"
+          mv artifacts/growatt-server-*.jar "artifacts/growatt-server-${VERSION}.jar"
 
           gh release create "v${VERSION}" \
             --title "v${VERSION}" \
             --generate-notes \
-            "artifacts/grottserver-${VERSION}.jar"
+            "artifacts/growatt-server-${VERSION}.jar"
 
   # ── Deploy GitHub Pages (main / master pushes only) ───────────────────────
   deploy-pages:
