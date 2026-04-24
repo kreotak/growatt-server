@@ -1,0 +1,124 @@
+name: Build
+
+on:
+  push:
+    branches: [ '**' ]   # all branches, excludes tag pushes
+  pull_request:
+    branches: [ main, master ]
+
+# Minimal default permissions — jobs that need more declare it themselves.
+permissions:
+  contents: read
+
+jobs:
+
+  # ── Build & test (runs on every push / PR) ─────────────────────────────────
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.next-version.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so we can read all existing tags
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build and test
+        run: mvn -B verify --no-transfer-progress
+
+      # Only needed for main/master pushes — compute next patch version from tags.
+      - name: Compute next version
+        id: next-version
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        run: |
+          LATEST=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-version:refname | head -1)
+          if [ -z "$LATEST" ]; then
+            NEXT="1.0.0"
+          else
+            IFS='.' read -r MAJOR MINOR PATCH <<< "${LATEST#v}"
+            NEXT="${MAJOR}.${MINOR}.$((PATCH + 1))"
+          fi
+          echo "version=${NEXT}" >> "$GITHUB_OUTPUT"
+          echo "Next release: v${NEXT}"
+
+      # Stamp the version into the GitHub Pages site before uploading the artifact.
+      - name: Stamp version into docs
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        run: |
+          VERSION="${{ steps.next-version.outputs.version }}"
+          sed -i "s/data-version=\"[^\"]*\"/data-version=\"${VERSION}\"/" docs/index.html
+
+      - name: Upload JAR artifact
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        uses: actions/upload-artifact@v4
+        with:
+          name: jar
+          path: target/grottserver-*.jar
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/
+
+  # ── Tag + GitHub Release (main / master pushes only) ──────────────────────
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name == 'push'
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: jar
+          path: artifacts/
+
+      - name: Create tag and GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "v${VERSION}"
+          git push origin "v${VERSION}"
+
+          # Rename to the release version (strips the pom -SNAPSHOT suffix)
+          mv artifacts/grottserver-*.jar "artifacts/grottserver-${VERSION}.jar"
+
+          gh release create "v${VERSION}" \
+            --title "v${VERSION}" \
+            --generate-notes \
+            "artifacts/grottserver-${VERSION}.jar"
+
+  # ── Deploy GitHub Pages (main / master pushes only) ───────────────────────
+  deploy-pages:
+    needs: build
+    runs-on: ubuntu-latest
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name == 'push'
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>grottserver — Growatt Inverter Server for Java</title>
+<meta name="description" content="Growatt solar inverter server — Java reimplementation. Receive, decode, and forward real-time inverter data to MQTT, InfluxDB, PVOutput, and more.">
+<style>
+:root {
+  --bg:      #0d1117;
+  --surf:    #161b22;
+  --surf2:   #21262d;
+  --border:  #30363d;
+  --solar:   #f59e0b;
+  --solar2:  #fde68a;
+  --green:   #22c55e;
+  --red:     #f87171;
+  --blue:    #3b82f6;
+  --purple:  #a78bfa;
+  --text:    #e6edf3;
+  --muted:   #7d8590;
+  --r:       12px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; }
+a { color: var(--solar); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+/* ── NAV ─────────────────────────────────────────────────────────────────── */
+nav { border-bottom: 1px solid var(--border); padding: 14px 0; position: sticky; top: 0; background: rgba(13,17,23,.92); backdrop-filter: blur(8px); z-index: 100; }
+.nav-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.nav-logo { font-size: 1.1rem; font-weight: 700; color: var(--solar); display: flex; align-items: center; gap: 8px; }
+.nav-links { display: flex; gap: 20px; }
+.nav-links a { color: var(--muted); font-size: .9rem; }
+.nav-links a:hover { color: var(--text); text-decoration: none; }
+
+/* ── HERO ─────────────────────────────────────────────────────────────────── */
+.hero { padding: 88px 0 64px; text-align: center; }
+.hero h1 {
+  font-size: clamp(2.2rem, 6vw, 3.8rem);
+  font-weight: 800;
+  background: linear-gradient(130deg, var(--solar) 0%, var(--solar2) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 18px;
+  letter-spacing: -.02em;
+}
+.hero-sub { font-size: 1.15rem; color: var(--muted); max-width: 580px; margin: 0 auto 36px; }
+.btn-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 22px; border-radius: 8px; font-size: .95rem; font-weight: 600; cursor: pointer; transition: background .15s, opacity .15s; }
+.btn:hover { text-decoration: none; opacity: .88; }
+.btn-primary { background: var(--solar); color: #000; }
+.btn-ghost   { background: var(--surf2); color: var(--text); border: 1px solid var(--border); }
+
+/* ── SECTION CHROME ──────────────────────────────────────────────────────── */
+.sec { padding: 64px 0; }
+.sec-label { text-align: center; font-size: .75rem; font-weight: 700; letter-spacing: .1em; color: var(--solar); text-transform: uppercase; margin-bottom: 10px; }
+.sec-title { text-align: center; font-size: 1.9rem; font-weight: 700; margin-bottom: 8px; }
+.sec-sub   { text-align: center; color: var(--muted); margin-bottom: 40px; }
+
+/* ── DASHBOARD CARD ──────────────────────────────────────────────────────── */
+.dash-card { background: var(--surf); border: 1px solid var(--border); border-radius: var(--r); padding: 32px; }
+.live-badge { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--green); margin-bottom: 24px; }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.75)} }
+.dash-center { text-align: center; }
+
+/* SVG flow diagram */
+.flow-svg { width: 100%; max-width: 720px; height: auto; display: block; margin: 0 auto; }
+
+/* Stat cards */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 14px; margin-top: 28px; }
+.stat-card { background: var(--surf2); border: 1px solid var(--border); border-radius: var(--r); padding: 16px; text-align: center; }
+.stat-lbl { font-size: .72rem; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em; }
+.stat-val { font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stat-val span { font-size: .78rem; color: var(--muted); margin-left: 1px; }
+
+/* ── FEATURES ─────────────────────────────────────────────────────────────── */
+.feat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 18px; }
+.feat-card { background: var(--surf); border: 1px solid var(--border); border-radius: var(--r); padding: 24px; }
+.feat-icon { font-size: 1.9rem; margin-bottom: 12px; }
+.feat-title { font-weight: 700; margin-bottom: 8px; }
+.feat-desc { color: var(--muted); font-size: .9rem; }
+
+/* ── QUICK START ─────────────────────────────────────────────────────────── */
+.code-card { background: var(--surf); border: 1px solid var(--border); border-radius: var(--r); padding: 24px 28px; overflow-x: auto; }
+.code-card pre { font-family: "SF Mono","Fira Code",monospace; font-size: .85rem; line-height: 1.75; color: #c9d1d9; }
+.cm { color: var(--muted) }
+.ky { color: #79c0ff }
+.vl { color: var(--solar) }
+.st { color: #a5d6ff }
+
+/* ── DOWNLOAD ────────────────────────────────────────────────────────────── */
+.dl-sec { text-align: center; }
+.ver-pill { display: inline-block; background: var(--surf2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 14px; font-size: .85rem; color: var(--muted); margin-bottom: 18px; }
+.req-note { color: var(--muted); font-size: .9rem; margin-bottom: 32px; }
+
+/* ── FOOTER ──────────────────────────────────────────────────────────────── */
+footer { border-top: 1px solid var(--border); padding: 28px 0; text-align: center; color: var(--muted); font-size: .85rem; }
+
+/* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .nav-links { display: none; }
+  .hero { padding: 56px 0 44px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Edit data-repo and data-version before pushing -->
+<div id="cfg" data-repo="kreotak/growatt-server" data-version="1.0.0" hidden></div>
+
+<nav>
+  <div class="wrap nav-row">
+    <a class="nav-logo" href="#">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+      </svg>
+      grottserver
+    </a>
+    <div class="nav-links">
+      <a href="#dashboard">Dashboard</a>
+      <a href="#features">Features</a>
+      <a href="#quickstart">Quick Start</a>
+      <a id="nav-gh" href="#">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+<!-- ── HERO ─────────────────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="wrap">
+    <h1>grottserver</h1>
+    <p class="hero-sub">Growatt solar inverter server — Java reimplementation. Receive, decode, and forward real-time inverter data to MQTT, InfluxDB, PVOutput, and more.</p>
+    <div class="btn-row">
+      <a id="btn-dl" href="#" class="btn btn-primary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Latest
+      </a>
+      <a id="btn-gh" href="#" class="btn btn-ghost">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        View on GitHub
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ── ANIMATED DASHBOARD ─────────────────────────────────────────────── -->
+<section class="sec" id="dashboard">
+  <div class="wrap">
+    <div class="sec-label">Live Preview</div>
+    <h2 class="sec-title">Embedded Dashboard</h2>
+    <p class="sec-sub">Animated with simulated data — your real inverter values appear here when connected</p>
+
+    <div class="dash-card">
+      <div class="dash-center">
+        <div class="live-badge"><div class="live-dot"></div>Simulated live data</div>
+      </div>
+
+      <!-- Power flow SVG diagram -->
+      <svg class="flow-svg" viewBox="0 0 720 270" xmlns="http://www.w3.org/2000/svg" aria-label="Power flow diagram">
+        <defs>
+          <!-- Flow paths (used for animateMotion) -->
+          <path id="pp-pv"   d="M 155,68  C 210,68  245,115 280,120"/>
+          <path id="pp-load" d="M 440,120 C 475,115 510,68  565,68"/>
+          <path id="pp-bat"  d="M 300,175 C 260,200  200,210 155,210"/>
+          <path id="pp-grid" d="M 420,175 C 460,200  520,210 565,210"/>
+          <path id="pp-grid-rev" d="M 565,210 C 520,210 460,200 420,175"/>
+        </defs>
+
+        <!-- Static connection lines -->
+        <use href="#pp-pv"   fill="none" stroke="#30363d" stroke-width="2.5"/>
+        <use href="#pp-load" fill="none" stroke="#30363d" stroke-width="2.5"/>
+        <use href="#pp-bat"  fill="none" stroke="#30363d" stroke-width="2.5"/>
+        <use href="#pp-grid" fill="none" stroke="#30363d" stroke-width="2.5"/>
+
+        <!-- PV → Inverter dots (always running) -->
+        <circle r="5" fill="#f59e0b" opacity=".9"><animateMotion dur="1.3s" repeatCount="indefinite" begin="0s">   <mpath href="#pp-pv"/></animateMotion></circle>
+        <circle r="5" fill="#f59e0b" opacity=".9"><animateMotion dur="1.3s" repeatCount="indefinite" begin=".43s"> <mpath href="#pp-pv"/></animateMotion></circle>
+        <circle r="5" fill="#f59e0b" opacity=".9"><animateMotion dur="1.3s" repeatCount="indefinite" begin=".86s"> <mpath href="#pp-pv"/></animateMotion></circle>
+
+        <!-- Inverter → Load dots -->
+        <circle r="5" fill="#a78bfa" opacity=".9"><animateMotion dur="1.5s" repeatCount="indefinite" begin="0s">   <mpath href="#pp-load"/></animateMotion></circle>
+        <circle r="5" fill="#a78bfa" opacity=".9"><animateMotion dur="1.5s" repeatCount="indefinite" begin=".5s">  <mpath href="#pp-load"/></animateMotion></circle>
+        <circle r="5" fill="#a78bfa" opacity=".9"><animateMotion dur="1.5s" repeatCount="indefinite" begin="1.0s"> <mpath href="#pp-load"/></animateMotion></circle>
+
+        <!-- Inverter → Battery dots (charging) -->
+        <circle r="5" fill="#3b82f6" opacity=".9"><animateMotion dur="2.2s" repeatCount="indefinite" begin="0s">    <mpath href="#pp-bat"/></animateMotion></circle>
+        <circle r="5" fill="#3b82f6" opacity=".9"><animateMotion dur="2.2s" repeatCount="indefinite" begin=".73s">  <mpath href="#pp-bat"/></animateMotion></circle>
+        <circle r="5" fill="#3b82f6" opacity=".9"><animateMotion dur="2.2s" repeatCount="indefinite" begin="1.47s"> <mpath href="#pp-bat"/></animateMotion></circle>
+
+        <!-- Grid export dots (green, shown when exporting) -->
+        <g id="g-export">
+          <circle r="5" fill="#22c55e" opacity=".9"><animateMotion dur="2.0s" repeatCount="indefinite" begin="0s">   <mpath href="#pp-grid"/></animateMotion></circle>
+          <circle r="5" fill="#22c55e" opacity=".9"><animateMotion dur="2.0s" repeatCount="indefinite" begin=".67s"> <mpath href="#pp-grid"/></animateMotion></circle>
+        </g>
+        <!-- Grid import dots (red, shown when importing) -->
+        <g id="g-import" opacity="0">
+          <circle r="5" fill="#f87171" opacity=".9"><animateMotion dur="2.0s" repeatCount="indefinite" begin="0s">   <mpath href="#pp-grid-rev"/></animateMotion></circle>
+          <circle r="5" fill="#f87171" opacity=".9"><animateMotion dur="2.0s" repeatCount="indefinite" begin=".67s"> <mpath href="#pp-grid-rev"/></animateMotion></circle>
+        </g>
+
+        <!-- ── Node boxes ─────────────────────────────────────────────── -->
+
+        <!-- PV -->
+        <rect x="22" y="22" width="133" height="90" rx="10" fill="#161b22" stroke="#f59e0b" stroke-width="2"/>
+        <text x="88"  y="54" text-anchor="middle" font-size="26">☀️</text>
+        <text x="88"  y="77" text-anchor="middle" fill="#7d8590" font-size="11" font-family="sans-serif" letter-spacing=".05em">PV POWER</text>
+        <text x="88"  y="98" text-anchor="middle" fill="#f59e0b" font-size="16" font-weight="700" font-family="monospace" id="d-pv">3,240 W</text>
+
+        <!-- Inverter (center) -->
+        <rect x="260" y="88" width="200" height="88" rx="10" fill="#161b22" stroke="#f59e0b" stroke-width="2"/>
+        <text x="360" y="116" text-anchor="middle" fill="#7d8590" font-size="11" font-family="sans-serif" letter-spacing=".05em">INVERTER</text>
+        <text x="360" y="138" text-anchor="middle" fill="#e6edf3" font-size="13" font-family="monospace">GW5000-ES</text>
+        <text x="360" y="160" text-anchor="middle" fill="#22c55e" font-size="11" font-family="sans-serif" id="d-status">● NORMAL</text>
+
+        <!-- Load / Home -->
+        <rect x="565" y="22" width="133" height="90" rx="10" fill="#161b22" stroke="#a78bfa" stroke-width="2"/>
+        <text x="631" y="54" text-anchor="middle" font-size="26">🏠</text>
+        <text x="631" y="77" text-anchor="middle" fill="#7d8590" font-size="11" font-family="sans-serif" letter-spacing=".05em">LOAD</text>
+        <text x="631" y="98" text-anchor="middle" fill="#a78bfa" font-size="16" font-weight="700" font-family="monospace" id="d-load">2,820 W</text>
+
+        <!-- Battery -->
+        <rect x="22" y="162" width="133" height="90" rx="10" fill="#161b22" stroke="#3b82f6" stroke-width="2"/>
+        <text x="88"  y="194" text-anchor="middle" font-size="26">🔋</text>
+        <text x="88"  y="217" text-anchor="middle" fill="#7d8590" font-size="11" font-family="sans-serif" letter-spacing=".05em">BATTERY</text>
+        <text x="88"  y="238" text-anchor="middle" fill="#3b82f6" font-size="16" font-weight="700" font-family="monospace" id="d-bat">78%</text>
+
+        <!-- Grid -->
+        <rect x="565" y="162" width="133" height="90" rx="10" fill="#161b22" stroke="#22c55e" stroke-width="2" id="d-grid-box"/>
+        <text x="631" y="194" text-anchor="middle" font-size="26">⚡</text>
+        <text x="631" y="217" text-anchor="middle" fill="#7d8590" font-size="11" font-family="sans-serif" letter-spacing=".05em">GRID</text>
+        <text x="631" y="238" text-anchor="middle" fill="#22c55e" font-size="16" font-weight="700" font-family="monospace" id="d-grid">+420 W</text>
+      </svg>
+
+      <!-- Stat cards -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-lbl">PV String 1</div>
+          <div class="stat-val" id="s-pv1" style="color:var(--solar)">380<span>V</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">PV String 2</div>
+          <div class="stat-val" id="s-pv2" style="color:var(--solar)">372<span>V</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">Grid Voltage</div>
+          <div class="stat-val" id="s-gv" style="color:var(--text)">232<span>V</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">Grid Frequency</div>
+          <div class="stat-val" id="s-freq" style="color:var(--text)">50.0<span>Hz</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">Temperature</div>
+          <div class="stat-val" id="s-temp" style="color:var(--text)">41<span>°C</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">Energy Today</div>
+          <div class="stat-val" id="s-today" style="color:var(--green)">14.3<span>kWh</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">Energy Total</div>
+          <div class="stat-val" id="s-total" style="color:var(--green)">4,821<span>kWh</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">Battery SOC</div>
+          <div class="stat-val" id="s-soc" style="color:var(--blue)">78<span>%</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURES ──────────────────────────────────────────────────────────── -->
+<section class="sec" id="features">
+  <div class="wrap">
+    <div class="sec-label">Capabilities</div>
+    <h2 class="sec-title">Everything you need</h2>
+    <p class="sec-sub">Built for Growatt SPH hybrid inverters with WiFi or LAN datalogger</p>
+    <div class="feat-grid">
+      <div class="feat-card">
+        <div class="feat-icon">📡</div>
+        <div class="feat-title">TCP + UDP Protocol</div>
+        <div class="feat-desc">Listens for incoming inverter connections on both TCP and UDP. Handles XOR-encrypted protocol 06, registration handshakes, ping/ACK, and buffered records automatically.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🏠</div>
+        <div class="feat-title">Home Assistant via MQTT</div>
+        <div class="feat-desc">Publishes real-time inverter data as JSON to any MQTT broker. Includes automatic HA MQTT Discovery — sensors appear instantly with correct device classes and units.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📊</div>
+        <div class="feat-title">InfluxDB v2</div>
+        <div class="feat-desc">Write every reading directly to InfluxDB for long-term time-series storage. Pair with Grafana for beautiful historical dashboards and energy analytics.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🌤️</div>
+        <div class="feat-title">PVOutput</div>
+        <div class="feat-desc">Automatically upload generation data to PVOutput.org. Configurable rate limiting, temperature reporting, and energy/power values — all correctly scaled.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🔌</div>
+        <div class="feat-title">REST API + Web UI</div>
+        <div class="feat-desc">Built-in live dashboard and REST API to monitor all connected inverters, browse raw values, inspect registry state, and configure MQTT on the fly.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🐳</div>
+        <div class="feat-title">Docker Ready</div>
+        <div class="feat-desc">Zero-config Docker deployment. All credentials are passed via environment variables — no config files to manage. Runs on any ARM or x86 host.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── QUICK START ────────────────────────────────────────────────────────── -->
+<section class="sec" id="quickstart">
+  <div class="wrap">
+    <div class="sec-label">Get Started</div>
+    <h2 class="sec-title">Up and running in minutes</h2>
+    <p class="sec-sub">Point your Growatt datalogger at this server's IP on port 5279. The dashboard opens on port 5782.</p>
+    <div class="code-card">
+      <pre><span class="cm"># docker-compose.yml</span>
+<span class="ky">services</span>:
+  <span class="ky">grottserver</span>:
+    <span class="ky">image</span>: <span class="st">eclipse-temurin:21-jre</span>
+    <span class="ky">ports</span>:
+      - <span class="st">"5279:5279"</span>   <span class="cm"># inverter TCP / UDP</span>
+      - <span class="st">"5782:5782"</span>   <span class="cm"># web dashboard &amp; API</span>
+    <span class="ky">environment</span>:
+      - <span class="vl">MQTT_ENABLED=true</span>
+      - <span class="vl">MQTT_HOST=your-mqtt-broker</span>
+      - <span class="vl">MQTT_HA_DISCOVERY=true</span>
+    <span class="ky">command</span>: <span class="st">["java", "-jar", "/app/grottserver.jar"]</span>
+    <span class="ky">volumes</span>:
+      - <span class="st">./grottserver.jar:/app/grottserver.jar:ro</span>
+    <span class="ky">restart</span>: <span class="vl">unless-stopped</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ── DOWNLOAD ───────────────────────────────────────────────────────────── -->
+<section class="sec dl-sec" id="download">
+  <div class="wrap">
+    <div class="sec-label">Download</div>
+    <h2 class="sec-title">Get grottserver</h2>
+    <div class="ver-pill" id="ver-badge">v1.0.0</div>
+    <p class="req-note">Requires Java 21 or later · Spring Boot fat-JAR · no installation needed</p>
+    <div class="btn-row">
+      <a id="dl-jar" href="#" class="btn btn-primary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download JAR
+      </a>
+      <a id="dl-releases" href="#" class="btn btn-ghost">All Releases</a>
+      <a id="dl-source"   href="#" class="btn btn-ghost">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        View Source
+      </a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>grottserver · MIT License · inspired by <a href="https://github.com/johanmeijer/grott" target="_blank" rel="noopener">grott</a> by Johan Meijer</p>
+  </div>
+</footer>
+
+<script>
+// ── Wire up GitHub links ─────────────────────────────────────────────────
+const cfg     = document.getElementById('cfg');
+const repo    = cfg.dataset.repo;
+const version = cfg.dataset.version;
+const gh      = 'https://github.com/' + repo;
+
+document.getElementById('nav-gh').href      = gh;
+document.getElementById('btn-gh').href      = gh;
+document.getElementById('btn-dl').href      = gh + '/releases/latest';
+document.getElementById('dl-jar').href      = gh + '/releases/latest/download/grottserver-' + version + '.jar';
+document.getElementById('dl-releases').href = gh + '/releases';
+document.getElementById('dl-source').href   = gh;
+document.getElementById('ver-badge').textContent = 'v' + version;
+
+// ── Animated dashboard simulation ───────────────────────────────────────
+const st = {
+  pvW:   3240,  loadW: 2820,  batSoc: 78,
+  batW:  200,   pv1v:  380,   pv2v:   372,
+  gridV: 232,   freq:  50.0,  temp:   41,
+  today: 14.3,  total: 4821,
+};
+
+function jit(v, d, lo, hi) {
+  return Math.max(lo, Math.min(hi, v + (Math.random() - 0.48) * d));
+}
+function fmt(n, dec) {
+  return n.toLocaleString('en-US', { minimumFractionDigits: dec || 0, maximumFractionDigits: dec || 0 });
+}
+
+const $  = id => document.getElementById(id);
+const gBox    = $('d-grid-box');
+const gText   = $('d-grid');
+const gExport = $('g-export');
+const gImport = $('g-import');
+
+function tick() {
+  st.pvW   = jit(st.pvW,   100, 0,    4800);
+  st.loadW = jit(st.loadW,  60, 200,  4000);
+  st.batSoc= jit(st.batSoc, 0.4, 10, 100);
+  st.batW  = jit(st.batW,   40, -800, 800);
+  st.pv1v  = jit(st.pv1v,   1.5, 300, 420);
+  st.pv2v  = jit(st.pv2v,   1.5, 300, 420);
+  st.freq  = jit(st.freq,   0.06, 49.4, 50.6);
+  st.gridV = jit(st.gridV,  1,   218, 242);
+  st.temp  = jit(st.temp,   0.3,  25,  75);
+  st.today += 0.0008;
+
+  const gridW = st.pvW + st.batW - st.loadW;
+  const exporting = gridW >= 0;
+
+  // SVG flow diagram updates
+  $('d-pv').textContent   = fmt(st.pvW) + ' W';
+  $('d-load').textContent = fmt(st.loadW) + ' W';
+  $('d-bat').textContent  = fmt(st.batSoc, 0) + '%';
+  gText.textContent  = (exporting ? '+' : '') + fmt(gridW) + ' W';
+  gText.setAttribute('fill', exporting ? '#22c55e' : '#f87171');
+  gBox.setAttribute('stroke', exporting ? '#22c55e' : '#f87171');
+  gExport.setAttribute('opacity', exporting ? '1' : '0');
+  gImport.setAttribute('opacity', exporting ? '0' : '1');
+
+  // Stat card updates (innerHTML is safe — all values are numbers)
+  $('s-pv1').innerHTML  = fmt(st.pv1v)      + '<span>V</span>';
+  $('s-pv2').innerHTML  = fmt(st.pv2v)      + '<span>V</span>';
+  $('s-gv').innerHTML   = fmt(st.gridV)     + '<span>V</span>';
+  $('s-freq').innerHTML = fmt(st.freq, 1)   + '<span>Hz</span>';
+  $('s-temp').innerHTML = fmt(st.temp, 0)   + '<span>°C</span>';
+  $('s-today').innerHTML= fmt(st.today, 1)  + '<span>kWh</span>';
+  $('s-total').innerHTML= fmt(st.total)     + '<span>kWh</span>';
+  $('s-soc').innerHTML  = fmt(st.batSoc, 0) + '<span>%</span>';
+}
+
+setInterval(tick, 1300);
+</script>
+</body>
+</html>

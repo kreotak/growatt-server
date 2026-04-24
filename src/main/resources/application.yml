@@ -1,0 +1,49 @@
+server:
+  port: 5782          # HTTP API port
+
+logging:
+  level:
+    org.kreotak.grott: INFO
+
+grott:
+  verbose: true
+  server-host: "0.0.0.0"
+  server-port: 5279   # TCP+UDP inverter port
+  include-all: false
+  inverter-response-wait-ms: 10000
+  datalogger-response-wait-ms: 5000
+
+  mqtt:
+    enabled: ${MQTT_ENABLED:false}
+    host: ${MQTT_HOST:localhost}
+    port: ${MQTT_PORT:1883}
+    topic: ${MQTT_TOPIC:energy/growatt}
+    meter-topic: ${MQTT_METER_TOPIC:energy/meter}
+    inverter-in-topic: ${MQTT_INVERTER_IN_TOPIC:false}
+    retain: ${MQTT_RETAIN:false}
+    auth: ${MQTT_AUTH:false}
+    user: ${MQTT_USER:grott}
+    password: ${MQTT_PASSWORD:}
+    ha-discovery: ${MQTT_HA_DISCOVERY:false}
+    ha-discovery-prefix: ${MQTT_HA_DISCOVERY_PREFIX:homeassistant}
+
+  influxdb:
+    enabled: false
+    url: ${INFLUXDB_URL:http://localhost:8086}
+    token: ${INFLUXDB_TOKEN:}
+    org: ${INFLUXDB_ORG:grottorg}
+    bucket: ${INFLUXDB_BUCKET:grottdb}
+
+  pvoutput:
+    enabled: false
+    api-key: ${PVOUTPUT_APIKEY:}
+    system-id: ${PVOUTPUT_SYSTEMID:}
+    rate-limit-minutes: 5
+    send-temperature: false
+    disable-v1: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

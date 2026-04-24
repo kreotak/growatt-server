@@ -1,0 +1,27 @@
+services:
+  grottserver:
+    image: eclipse-temurin:21-jre
+    restart: unless-stopped
+    ports:
+      - "5279:5279/tcp"
+      - "5279:5279/udp"
+      - "5782:5782/tcp"
+    volumes:
+      - ./app:/app
+    command: java -jar /app/grottserver-1.0.0-SNAPSHOT.jar
+    environment:
+      # ── MQTT ──────────────────────────────────────
+      MQTT_ENABLED: "false"
+      MQTT_HOST: "localhost"
+      MQTT_PORT: "1883"
+      MQTT_TOPIC: "energy/growatt"
+      MQTT_RETAIN: "false"
+
+      # Uncomment to enable authentication
+      # MQTT_AUTH: "true"
+      # MQTT_USER: "myuser"
+      # MQTT_PASSWORD: "mypassword"
+
+      # ── Home Assistant discovery ───────────────────
+      # MQTT_HA_DISCOVERY: "true"
+      # MQTT_HA_DISCOVERY_PREFIX: "homeassistant"
